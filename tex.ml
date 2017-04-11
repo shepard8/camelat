@@ -16,6 +16,10 @@ let register_text (cfg : 'a cfg) (f : string -> 'a) : 'a cfg =
     assert (Str.string_match r_text s i);
     let t = Str.matched_string s in
     (f t, Str.match_end ())) :: cfg
+
+let register_cmd (cfg : 'a cfg) (cmd : string) (f : unit -> 'a) : 'a cfg =
+  (cmd, fun s i ->
+    (f (), i)) :: cfg
 (*
 let register_cmd cfg cmd n opts f =
   (cmd, fun s i ->
@@ -37,5 +41,6 @@ let register_cmd cfg cmd n opts f =
 let () =
   let cfg = [] in
   let cfg = register_text cfg (fun s -> "\"" ^ s ^ "\"") in
-  let s = read cfg "coucou" 0 in
-  print_endline (fst s)
+  let cfg = register_cmd cfg "test" (fun () -> "[test cmd]") in
+  print_endline (fst (read cfg "coucou \\test" 0));
+  print_endline (fst (read cfg "\\test coucou" 0))
