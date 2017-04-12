@@ -18,7 +18,14 @@ let read (cfg : 'a cfg) (s : string) (i : int) : 'a * int =
     f s i
   else raise End_of_stream
 
-(*let rec read_until (cfg : 'a cfg) (r : Str.regexp) (s : string) (i : int) : 'a list * int =*)
+let rec read_until (cfg : 'a cfg) ?(r : Str.regexp option) (s : string) (i : int) : 'a list * int =
+  match r with
+  | None when i = String.length s -> ([], i)
+  | Some r when Str.string_match r s i -> ([], i)
+  | r ->
+      let (v, i) = read cfg s i in
+      let (l, i) = read_until cfg ?r s i in
+      (v :: l, i)
 
 let register_text (cfg : 'a cfg) (f : string -> 'a) : 'a cfg =
   ("text", fun s i ->
@@ -27,7 +34,7 @@ let register_text (cfg : 'a cfg) (f : string -> 'a) : 'a cfg =
 
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : unit -> 'a) : 'a cfg =
   (cmd, fun s i ->
-    (f (), i)) :: cfg
+    (f (), Str.match_end ())) :: cfg
 (*
 let register_cmd cfg cmd n opts f =
   (cmd, fun s i ->
@@ -50,6 +57,6 @@ let () =
   let cfg = [] in
   let cfg = register_text cfg (fun s -> "\"" ^ s ^ "\"") in
   let cfg = register_cmd cfg "test" (fun () -> "[test cmd]") in
-  print_endline (fst (read cfg "coucou \n\\test" 0));
-  print_endline (fst (read cfg "\\test coucou" 0));
-  print_endline (fst (read cfg "\\blabla test" 0))
+  let s = "coucou \n\\test\\blabla ???" in
+  let (l, _) = read_until cfg s 0 in
+  List.iter print_endline l
