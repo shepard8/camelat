@@ -1,3 +1,5 @@
+exception End_of_stream
+
 let r_cmd = Str.regexp "\\\\\\([a-zA-Z]+\\)"
 let r_text = Str.regexp "\\(\\\\{\\|\\\\}\\|[^\\\\{}]\\)*"
 
@@ -5,15 +7,21 @@ type 'a cfg = (string * (string -> int -> 'a * int)) list
 
 let read (cfg : 'a cfg) (s : string) (i : int) : 'a * int =
   if Str.string_match r_cmd s i then
-    let f = List.assoc (Str.matched_group 1 s) cfg in
-    f s i
-  else
+    try
+      let f = List.assoc (Str.matched_group 1 s) cfg in
+      f s i
+    with Not_found ->
+      let f = List.assoc "text" cfg in
+      f s i
+  else if Str.string_match r_text s i then
     let f = List.assoc "text" cfg in
     f s i
+  else raise End_of_stream
+
+(*let rec read_until (cfg : 'a cfg) (r : Str.regexp) (s : string) (i : int) : 'a list * int =*)
 
 let register_text (cfg : 'a cfg) (f : string -> 'a) : 'a cfg =
   ("text", fun s i ->
-    assert (Str.string_match r_text s i);
     let t = Str.matched_string s in
     (f t, Str.match_end ())) :: cfg
 
@@ -42,5 +50,6 @@ let () =
   let cfg = [] in
   let cfg = register_text cfg (fun s -> "\"" ^ s ^ "\"") in
   let cfg = register_cmd cfg "test" (fun () -> "[test cmd]") in
-  print_endline (fst (read cfg "coucou \\test" 0));
-  print_endline (fst (read cfg "\\test coucou" 0))
+  print_endline (fst (read cfg "coucou \n\\test" 0));
+  print_endline (fst (read cfg "\\test coucou" 0));
+  print_endline (fst (read cfg "\\blabla test" 0))
