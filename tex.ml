@@ -5,10 +5,12 @@ module CfgMap = Map.Make (struct type t = string let compare = compare end)
 type source = string
 type 'a cfg = (source -> int -> ('a * int)) CfgMap.t
 
+let r_empty = Str.regexp ""
 let r_cmd = Str.regexp "\\\\\\([a-zA-Z]+\\)"
 let r_text = Str.regexp "\\(\\\\{\\|\\\\}\\|[^\\\\{}]\\)+"
 let r_spaces = Str.regexp "[ \t\r\n]*"
 let r_arg = Str.regexp "{\\([^}]*\\)}"
+let r_opt = Str.regexp "\\[\\([^]]*\\)\\]"
 let r_any = Str.regexp "."
 let r_openbrace = Str.regexp "{"
 let r_closebrace = Str.regexp "}"
@@ -48,9 +50,7 @@ let rec read_until (cfg : 'a cfg) ?(r : Str.regexp option) (s : source) (i : int
 (* Helpers *)
 (* All the following functions must be "safe" w.r.t. Str.match_end (). *)
 (*let read_env_content
-let read_arg
 let read_opt
-let read_raw_arg
 let read_raw_opt*)
 
 let read_arg_raw (s : source) : string =
@@ -74,6 +74,15 @@ let read_arg (cfg : 'a cfg) (s : source) : 'a list =
     [fst (f s i)]
   else assert false
 
+let read_opt_raw (s : source) (default : string) : string =
+  let i = Str.match_end () in
+  ignore (Str.string_match r_spaces s i);
+  if Str.string_match r_opt s (Str.match_end ()) then
+    Str.matched_group 1 s
+  else begin
+    assert (Str.string_match r_empty s i); (* Reset Str.match_end pointer *)
+    default
+  end
 
 (* Populating the config *)
 
@@ -110,7 +119,12 @@ let () =
     let t = read_arg cfg s in
     "<i>" ^ String.concat "" t ^ "</i>"
   ) in
-  let s = "coucou \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} ???" in
+  let cfg = register_cmd cfg "b" (fun s ->
+    let o = read_opt_raw s "test" in
+    let a = read_arg cfg s in
+    "<b>" ^ o ^ String.concat "" a ^ "</b>"
+  ) in
+  let s = "coucou \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b ???" in
   let (l, _) = read_until cfg s 0 in
   List.iter print_endline l
 
