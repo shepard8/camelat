@@ -1,3 +1,11 @@
+(* TODO
+   - Add environment support
+   - Add inline/display support
+   - Add unit tests
+   - Add Eliom default config
+   - \{ and \} should not be matched as text (they are not in LaTeX anyway)
+*)
+
 exception End_of_stream
 
 module CfgMap = Map.Make (struct type t = string let compare = compare end)
