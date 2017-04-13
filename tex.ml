@@ -76,7 +76,6 @@ let read_arg (cfg : 'a cfg) (s : source) : 'a =
     fst (f s i)
   else assert false
 
-(* TODO handle end-of-stream errors *)
 let read_opt_raw (s : source) (default : string) : string =
   let i = Str.match_end () in
   ignore (Str.string_match r_spaces s i);
@@ -87,7 +86,6 @@ let read_opt_raw (s : source) (default : string) : string =
     default
   end
 
-(* TODO handle end-of-stream errors *)
 let read_opt (cfg : 'a cfg) (s : source) (default : 'a) : 'a =
   let i = Str.match_end () in
   ignore (Str.string_match r_spaces s i);
@@ -126,6 +124,7 @@ let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : 'a cfg =
 
 
 (* Test *)
+
 let () =
   let cfg = CfgMap.empty in
   let cfg = register_text cfg (fun s -> "\"" ^ s ^ "\"") in
@@ -149,7 +148,7 @@ let () =
     let o = read_opt cfg s "aoeu" in
     "<c>" ^ o ^ "</c>"
   ) in
-  let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla" in
+  let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla \\c" in
   let (l, _) = read_until cfg s 0 in
   List.iter print_endline l
 
