@@ -58,6 +58,10 @@ let rec read_until (cfg : 'a cfg) ?(r : Str.regexp option) (s : source) (i : int
       let (l, i) = read_until cfg ?r s i in
       (v :: l, i)
 
+let parse (cfg : 'a cfg) (s : source) =
+  let f = CfgMap.find "@group" (!cfg) in
+  fst (f (s ^ "}") 0)
+
 (* Helpers *)
 (* The following function must be "safe" w.r.t. Str.match_end (). *)
 (*let read_env_content*)
@@ -158,6 +162,6 @@ let () =
 
 let () =
   let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla \\c" in
-  let (l, _) = read_until cfgtest s 0 in
-  List.iter print_endline l
+  let output = parse cfgtest s in
+  print_endline output
 
