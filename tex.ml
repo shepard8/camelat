@@ -108,21 +108,21 @@ let read_opt (cfg : 'a cfg) (s : source) (default : 'a) : 'a =
 
 (* Populating the config *)
 
-let register_text (cfg : 'a cfg) (f : string -> 'a) : unit =
-  cfg := CfgMap.add "@text" (fun (s : source) (i : int) ->
+let init ftext fgroup =
+  let cfg = ref CfgMap.empty in
+  cfg := CfgMap.add "@text" (fun s i ->
     let t = Str.matched_string s in
-    (f t, i)
-  ) (!cfg)
-
-let register_group (cfg : 'a cfg) (f : 'a list -> 'a) : unit =
-  cfg := CfgMap.add "@group" (fun (s : source) (i : int) ->
-    let (l, i) = read_until cfg ~r:r_closebrace s i in
-    (f l, i)
+    (ftext t, i)
   ) (!cfg);
-  cfg := CfgMap.add "@opt" (fun (s : source) (i : int) ->
+  cfg := CfgMap.add "@group" (fun s i ->
+    let (l, i) = read_until cfg ~r:r_closebrace s i in
+    (fgroup l, i)
+  ) (!cfg);
+  cfg := CfgMap.add "@opt" (fun s i ->
     let (l, i) = read_until cfg ~r:r_closebracket s i in
-    (f l, i)
-  ) (!cfg)
+    (fgroup l, i)
+  ) (!cfg);
+  cfg
 
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : unit =
   cfg := CfgMap.add cmd (fun (s : source) (i : int) ->
@@ -133,11 +133,9 @@ let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : unit =
 
 (* Test *)
 
-let cfgtest = ref CfgMap.empty
+let cfgtest = init (fun s -> "\"" ^ s ^ "\"") (String.concat "")
 
 let () =
-  register_text cfgtest (fun s -> "\"" ^ s ^ "\"");
-  register_group cfgtest (fun l -> String.concat "" l);
   register_cmd cfgtest "test" (fun s -> "[test cmd]");
   register_cmd cfgtest "verb" (fun s ->
     let t = read_arg_raw s in
