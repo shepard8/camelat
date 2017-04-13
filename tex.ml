@@ -3,7 +3,6 @@
    - Add inline/display support
    - Add unit tests
    - Add Eliom default config
-   - \{ and \} should not be matched as text (they are not in LaTeX anyway)
 *)
 
 exception End_of_stream
@@ -15,7 +14,7 @@ type 'a cfg = (source -> int -> ('a * int)) CfgMap.t ref
 
 let r_empty = Str.regexp ""
 let r_cmd = Str.regexp "\\\\\\([a-zA-Z]+\\)"
-let r_text = Str.regexp "\\(\\\\{\\|\\\\}\\|[^]\\\\{}]\\)+"
+let r_text = Str.regexp "[^]\\\\{}]+"
 let r_spaces = Str.regexp "[ \t\r\n]*"
 let r_arg = Str.regexp "{\\([^}]*\\)}"
 let r_opt = Str.regexp "\\[\\([^]]*\\)\\]"
