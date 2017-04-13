@@ -3,17 +3,19 @@ exception End_of_stream
 module CfgMap = Map.Make (struct type t = string let compare = compare end)
 
 type source = string
-type 'a cfg = (source -> int -> ('a * int)) CfgMap.t
+type 'a cfg = (source -> int -> ('a * int)) CfgMap.t (* ref *)
 
 let r_empty = Str.regexp ""
 let r_cmd = Str.regexp "\\\\\\([a-zA-Z]+\\)"
-let r_text = Str.regexp "\\(\\\\{\\|\\\\}\\|[^\\\\{}]\\)+"
+let r_text = Str.regexp "\\(\\\\{\\|\\\\}\\|[^]\\\\{}]\\)+"
 let r_spaces = Str.regexp "[ \t\r\n]*"
 let r_arg = Str.regexp "{\\([^}]*\\)}"
 let r_opt = Str.regexp "\\[\\([^]]*\\)\\]"
 let r_any = Str.regexp "."
 let r_openbrace = Str.regexp "{"
 let r_closebrace = Str.regexp "}"
+let r_openbracket = Str.regexp "\\["
+let r_closebracket = Str.regexp "\\]"
 
 
 (* Parsing *)
@@ -32,7 +34,9 @@ let read (cfg : 'a cfg) (s : source) (i : int) : 'a * int =
     let f = CfgMap.find "@group" cfg in
     let i = Str.match_end () in
     f s i
-  else if Str.string_match r_text s i then
+  else if Str.string_match r_text s i || Str.string_match r_closebracket s i then
+    (* Those cases have to be handled in separate regexes for end of options to
+     * be detected *)
     let f = CfgMap.find "@text" cfg in
     let i = Str.match_end () in
     f s i
@@ -48,10 +52,8 @@ let rec read_until (cfg : 'a cfg) ?(r : Str.regexp option) (s : source) (i : int
       (v :: l, i)
 
 (* Helpers *)
-(* All the following functions must be "safe" w.r.t. Str.match_end (). *)
-(*let read_env_content
-let read_opt
-let read_raw_opt*)
+(* The following function must be "safe" w.r.t. Str.match_end (). *)
+(*let read_env_content*)
 
 let read_arg_raw (s : source) : string =
   ignore (Str.string_match r_spaces s (Str.match_end ()));
@@ -74,6 +76,7 @@ let read_arg (cfg : 'a cfg) (s : source) : 'a =
     fst (f s i)
   else assert false
 
+(* TODO handle end-of-stream errors *)
 let read_opt_raw (s : source) (default : string) : string =
   let i = Str.match_end () in
   ignore (Str.string_match r_spaces s i);
@@ -83,6 +86,20 @@ let read_opt_raw (s : source) (default : string) : string =
     assert (Str.string_match r_empty s i); (* Reset Str.match_end pointer *)
     default
   end
+
+(* TODO handle end-of-stream errors *)
+let read_opt (cfg : 'a cfg) (s : source) (default : 'a) : 'a =
+  let i = Str.match_end () in
+  ignore (Str.string_match r_spaces s i);
+  if Str.string_match r_openbracket s (Str.match_end ()) then
+    let f = CfgMap.find "@opt" cfg in
+    let i = Str.match_end () in
+    fst (f s i)
+  else begin
+    assert (Str.string_match r_empty s i); (* Reset Str.match_end pointer *)
+    default
+  end
+
 
 (* Populating the config *)
 
@@ -96,7 +113,10 @@ let register_group (cfg : 'a cfg) (f : 'a list -> 'a) : 'a cfg =
   CfgMap.add "@group" (fun (s : source) (i : int) ->
     let (l, i) = read_until cfg ~r:r_closebrace s i in
     (f l, i)
-  ) cfg
+  ) (CfgMap.add "@opt" (fun (s : source) (i : int) ->
+    let (l, i) = read_until cfg ~r:r_closebracket s i in
+    (f l, i)
+  ) cfg)
 
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : 'a cfg =
   CfgMap.add cmd (fun (s : source) (i : int) ->
@@ -122,9 +142,14 @@ let () =
   let cfg = register_cmd cfg "b" (fun s ->
     let o = read_opt_raw s "test" in
     let a = read_arg cfg s in
-    "<b>" ^ o ^ a ^ "</b>"
+    let o' = read_opt cfg s "XXX" in
+    "<b>" ^ o ^ a ^ o' ^ "</b>"
   ) in
-  let s = "coucou \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b ???" in
+  let cfg = register_cmd cfg "c" (fun s ->
+    let o = read_opt cfg s "aoeu" in
+    "<c>" ^ o ^ "</c>"
+  ) in
+  let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla" in
   let (l, _) = read_until cfg s 0 in
   List.iter print_endline l
 
