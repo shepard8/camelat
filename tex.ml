@@ -62,16 +62,16 @@ let read_arg_raw (s : source) : string =
     Str.matched_string s
   else assert false
 
-let read_arg (cfg : 'a cfg) (s : source) : 'a list =
+let read_arg (cfg : 'a cfg) (s : source) : 'a =
   ignore (Str.string_match r_spaces s (Str.match_end ()));
   let i = Str.match_end () in
   if Str.string_match r_openbrace s i then
     let f = CfgMap.find "@group" cfg in
     let i = Str.match_end () in
-    [fst (f s i)]
+    fst (f s i)
   else if Str.string_match r_any s i then
     let f = CfgMap.find "@text" cfg in
-    [fst (f s i)]
+    fst (f s i)
   else assert false
 
 let read_opt_raw (s : source) (default : string) : string =
@@ -117,12 +117,12 @@ let () =
   ) in
   let cfg = register_cmd cfg "i" (fun s ->
     let t = read_arg cfg s in
-    "<i>" ^ String.concat "" t ^ "</i>"
+    "<i>" ^ t ^ "</i>"
   ) in
   let cfg = register_cmd cfg "b" (fun s ->
     let o = read_opt_raw s "test" in
     let a = read_arg cfg s in
-    "<b>" ^ o ^ String.concat "" a ^ "</b>"
+    "<b>" ^ o ^ a ^ "</b>"
   ) in
   let s = "coucou \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b ???" in
   let (l, _) = read_until cfg s 0 in
