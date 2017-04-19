@@ -10,6 +10,7 @@ exception End_of_stream
 module CfgMap = Map.Make (struct type t = string let compare = compare end)
 
 type source = string
+type csname = string
 type 'a cfg = (source -> int -> ('a * int)) CfgMap.t ref
 
 let r_empty = Str.regexp ""
