@@ -124,28 +124,21 @@ and craw () = init (fun s -> s) (String.concat "")
 
 let cfg_raw = craw ()
 
-
-
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : unit =
   cfg := CfgMap.add cmd (fun (s : source) (i : int) ->
     let v = f s in
     (v, Str.match_end ())
   ) (!cfg)
-  
-(*
+
+  (*
 let register_env (cfg : 'a cfg) (env : string) ?init ?subcfg f : unit =
-  if ! CfgMap.mem "begin" (!cfg) then begin
-    cfg := CfgMap.add "begin" (fun (s : source) (i : int) ->
-      let e = read_arg cfg_raw s in
-      try
-        let f = CfgMap.find ("env@" ^ e) (!cfg) in
-        f s (Str.match_end ())
-      with Not_found -> 
-      if CfgMap.mem ("env@" ^ e) (!cfg) then
-        
-    ) (!cfg)
-  end;
-  cfg := CfgMap.add "begin" (fun (s : source) (i : int) ->
+  cfg := CfgMap.add ("env@" ? env) (fun (s : source) (i : int) ->
+    let i, data = match init with
+    | None -> i, None
+    | Some -> let v = init s i in (Str.match_end (), Some v)
+    in
+    let content = match subcfg with
+      | None -> 
     ignore (Str.string_match r_empty i);
     let e = read_arg_raw cfg s in
     if e = env then let v = f source in (v, Str.match_end ())
