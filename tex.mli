@@ -1,16 +1,17 @@
 exception End_of_stream
 
 type source = string
+type csname = string
 type 'a cfg
 
 (** Building a config *)
 val init : (string -> 'a) -> ('a list -> 'a) -> 'a cfg
-val register_cmd : 'a cfg -> string -> (source -> 'a) -> unit
+val register_cmd : 'a cfg -> csname -> (source -> 'a) -> unit
+(*val register_env : 'a cfg -> csname -> ?init:(source -> 'b) -> ?subcfg:'c cfg -> ('b -> 'c -> 'a) -> unit*)
 
+val cfg_raw : string cfg
 val read_arg : 'a cfg -> source -> 'a
-val read_arg_raw : source -> string
 val read_opt : 'a cfg -> source -> 'a -> 'a
-val read_opt_raw : source -> string -> string
 
 (** Parsing *)
 val parse : 'a cfg -> source -> 'a

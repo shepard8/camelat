@@ -66,15 +66,6 @@ let parse (cfg : 'a cfg) (s : source) =
 (* The following function must be "safe" w.r.t. Str.match_end (). *)
 (*let read_env_content*)
 
-let read_arg_raw (s : source) : string =
-  ignore (Str.string_match r_spaces s (Str.match_end ()));
-  let i = Str.match_end () in
-  if Str.string_match r_arg s i then
-    Str.matched_group 1 s
-  else if Str.string_match r_any s i then
-    Str.matched_string s
-  else assert false
-
 let read_arg (cfg : 'a cfg) (s : source) : 'a =
   ignore (Str.string_match r_spaces s (Str.match_end ()));
   let i = Str.match_end () in
@@ -86,16 +77,6 @@ let read_arg (cfg : 'a cfg) (s : source) : 'a =
     let f = CfgMap.find "@text" (!cfg) in
     fst (f s i)
   else assert false
-
-let read_opt_raw (s : source) (default : string) : string =
-  let i = Str.match_end () in
-  ignore (Str.string_match r_spaces s i);
-  if Str.string_match r_opt s (Str.match_end ()) then
-    Str.matched_group 1 s
-  else begin
-    assert (Str.string_match r_empty s i); (* Reset Str.match_end pointer *)
-    default
-  end
 
 let read_opt (cfg : 'a cfg) (s : source) (default : 'a) : 'a =
   let i = Str.match_end () in
@@ -128,12 +109,24 @@ let init ftext fgroup =
   ) (!cfg);
   cfg
 
+let cfg_raw = init (fun s -> s) (String.concat "")
+
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : unit =
   cfg := CfgMap.add cmd (fun (s : source) (i : int) ->
     let v = f s in
     (v, Str.match_end ())
   ) (!cfg)
 
+  (*
+let register_env (cfg : 'a cfg) (env : string) ?init ?subcfg f : unit =
+  let fbegin = CfgMap.find "begin" (!cfg) in
+  cfg := CfgMap.add "begin" (fun (s : source) (i : int) ->
+    ignore (Str.string_match r_empty i);
+    let e = read_arg_raw cfg s in
+    if e = env then let v = f source in (v, Str.match_end ())
+    else fbegin source i
+  ) (!cfg)
+  *)
 
 (* Test *)
 
@@ -142,7 +135,7 @@ let cfgtest = init (fun s -> "\"" ^ s ^ "\"") (String.concat "")
 let () =
   register_cmd cfgtest "test" (fun s -> "[test cmd]");
   register_cmd cfgtest "verb" (fun s ->
-    let t = read_arg_raw s in
+    let t = read_arg cfg_raw s in
     "<i>" ^ t ^ "</i>"
   );
   register_cmd cfgtest "i" (fun s ->
@@ -150,7 +143,7 @@ let () =
     "<i>" ^ t ^ "</i>"
   );
   register_cmd cfgtest "b" (fun s ->
-    let o = read_opt_raw s "test" in
+    let o = read_opt cfg_raw s "test" in
     let a = read_arg cfgtest s in
     let o' = read_opt cfgtest s "XXX" in
     "<b>" ^ o ^ a ^ o' ^ "</b>"
