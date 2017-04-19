@@ -94,7 +94,7 @@ let read_opt (cfg : 'a cfg) (s : source) (default : 'a) : 'a =
 
 (* Populating the config *)
 
-let init ftext fgroup =
+let rec init ftext fgroup =
   let cfg = ref CfgMap.empty in
   cfg := CfgMap.add "@text" (fun s i ->
     let t = Str.matched_string s in
@@ -108,26 +108,50 @@ let init ftext fgroup =
     let (l, i) = read_until cfg ~r:r_closebracket s i in
     (fgroup l, i)
   ) (!cfg);
+  cfg := CfgMap.add "begin" (fun s i ->
+    let e = read_arg (craw ()) s in
+    try
+      let f = CfgMap.find ("env@" ^ e) (!cfg) in
+      f s i
+    with Not_found -> (ftext ("\\begin{" ^ e ^ "}"), Str.match_end ())
+  ) (!cfg);
+  cfg := CfgMap.add "end" (fun s i ->
+    let e = read_arg (craw ()) s in
+    (ftext ("\\end{" ^ e ^ "}"), Str.match_end ())
+  ) (!cfg);
   cfg
+and craw () = init (fun s -> s) (String.concat "")
 
-let cfg_raw = init (fun s -> s) (String.concat "")
+let cfg_raw = craw ()
+
+
 
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : unit =
   cfg := CfgMap.add cmd (fun (s : source) (i : int) ->
     let v = f s in
     (v, Str.match_end ())
   ) (!cfg)
-
-  (*
+  
+(*
 let register_env (cfg : 'a cfg) (env : string) ?init ?subcfg f : unit =
-  let fbegin = CfgMap.find "begin" (!cfg) in
+  if ! CfgMap.mem "begin" (!cfg) then begin
+    cfg := CfgMap.add "begin" (fun (s : source) (i : int) ->
+      let e = read_arg cfg_raw s in
+      try
+        let f = CfgMap.find ("env@" ^ e) (!cfg) in
+        f s (Str.match_end ())
+      with Not_found -> 
+      if CfgMap.mem ("env@" ^ e) (!cfg) then
+        
+    ) (!cfg)
+  end;
   cfg := CfgMap.add "begin" (fun (s : source) (i : int) ->
     ignore (Str.string_match r_empty i);
     let e = read_arg_raw cfg s in
     if e = env then let v = f source in (v, Str.match_end ())
     else fbegin source i
   ) (!cfg)
-  *)
+*)
 
 (* Test *)
 
@@ -155,7 +179,7 @@ let () =
   )
 
 let () =
-  let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla \\c" in
+  let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla \\c \\begin{test} blabla \\end{test}" in
   let output = parse cfgtest s in
   print_endline output
 
