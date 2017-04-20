@@ -138,6 +138,8 @@ let init (ftext : string -> 'a) (fgroup : 'a list -> 'a) =
   ) (!cfg);
   cfg
 
+let copy cfg = ref (!cfg)
+
   (* TODO restrict if cfg_raw *)
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : unit =
   cfg := CfgMap.add cmd (fun (s : source) (i : int) ->
@@ -184,10 +186,20 @@ let () =
   (fun () -> cfgtest)
   (fun () l ->
     "[" ^ String.concat "; " l ^ "]"
-  )
+  );
+  register_env cfgtest "bla"
+  (fun s ->
+    let o = read_opt cfgtest s "abcd" in
+    let a = read_arg cfgtest s in
+    (o, a))
+  (fun _ ->
+    let cfgtest' = copy cfgtest in
+    register_cmd cfgtest' "c" (fun s -> "inner");
+    cfgtest')
+  (fun _ l -> String.concat "" l)
 
 let () =
-  let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla \\c \\begin{test} blabla {test} bla \\end{test}" in
+  let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla \\c \\begin{bla}[a]{b} blabla {test} \\c \\end{bla} \\c{bla}" in
   let output = parse cfgtest s in
   print_endline output
 
