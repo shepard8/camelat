@@ -1,0 +1,8 @@
+(* OASIS_START *)
+(* DO NOT EDIT (digest: 219f1c959c637cc843d86bb0d41f059f) *)
+
+Authors of TexML:
+
+* Fabian Pijcke <fabian@pijcke.net>
+
+(* OASIS_STOP *)

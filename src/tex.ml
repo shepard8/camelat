@@ -158,7 +158,7 @@ let register_env (cfg : 'a cfg) (env : string) (init : source -> 'b) (subcfg : '
   ) (!cfg)
 
 (* Test *)
-
+(*
 let cfgtest = init (fun s -> "\"" ^ s ^ "\"") (String.concat "")
 
 let () =
@@ -202,4 +202,5 @@ let () =
   let s = "cou[co]u[ \n\\test\\blabla {coucou}  coucou \\verb {coucou} \\verb ijk \\i abc \\i{abc} \\i {abc} \\b a \\b [bla] b [Y] \\b b [y] ??? \\c [x] bla \\c \\begin{bla}[a]{b} blabla {test} \\c \\end{bla} \\c{bla}" in
   let output = parse cfgtest s in
   print_endline output
+*)
 

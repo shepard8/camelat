@@ -1,0 +1,12 @@
+# OASIS_START
+# DO NOT EDIT (digest: 3c8e04cbee456ccd381ce428f2483010)
+version = "0.1.0"
+description = "Defines simple parsers for LaTeX-like strings"
+requires = "str"
+archive(byte) = "latexp.cma"
+archive(byte, plugin) = "latexp.cma"
+archive(native) = "latexp.cmxa"
+archive(native, plugin) = "latexp.cmxs"
+exists_if = "latexp.cma"
+# OASIS_STOP
+
