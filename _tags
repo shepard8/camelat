@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: fffe8162652095ceeb12cf88632084ec)
+# DO NOT EDIT (digest: d06279b1192af8f2174ca0d07ef6ed15)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -16,12 +16,18 @@ true: annot, bin_annot
 "_darcs": not_hygienic
 # Library latexp
 "src/latexp.cmxs": use_latexp
+<src/*.ml{,i,y}>: pkg_eliom.server
 <src/*.ml{,i,y}>: pkg_str
+<src/*.ml{,i,y}>: pkg_threads
 # Executable test_main
+"tests/main.byte": pkg_eliom.server
 "tests/main.byte": pkg_str
 "tests/main.byte": pkg_testsimple
+"tests/main.byte": pkg_threads
 "tests/main.byte": use_latexp
+<tests/*.ml{,i,y}>: pkg_eliom.server
 <tests/*.ml{,i,y}>: pkg_str
 <tests/*.ml{,i,y}>: pkg_testsimple
+<tests/*.ml{,i,y}>: pkg_threads
 <tests/*.ml{,i,y}>: use_latexp
 # OASIS_STOP

@@ -1,5 +1,5 @@
 OASISFormat:    0.4
-Name:           TexML
+Name:           ocaml-latexp
 Version:        0.1.0
 Synopsis:       Defines simple parsers for LaTeX-like strings
 Authors:        Fabian Pijcke <fabian@pijcke.net>
@@ -10,8 +10,8 @@ Plugins:        META (0.4), StdFiles (0.4), DevFiles (0.4)
 Library latexp
   Path:         src
   BuildTools:   ocamlbuild
-  BuildDepends: str
-  Modules:      Tex
+  BuildDepends: str, eliom.server, threads
+  Modules:      Tex, Eliom
 
 Executable test_main
   Path:         tests

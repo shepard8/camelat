@@ -8,7 +8,7 @@ type 'a cfg
 val init : (string -> 'a) -> ('a list -> 'a) -> 'a cfg
 val copy : 'a cfg -> 'a cfg
 val register_cmd : 'a cfg -> csname -> (source -> 'a) -> unit
-val register_env : 'a cfg -> csname -> (source -> 'b) -> ('b -> 'c cfg) -> ('b -> 'c list -> 'a) -> unit
+val register_env : 'a cfg -> csname -> (source -> 'b) -> ('b -> 'c cfg) -> ('b -> 'c -> 'a) -> unit
 
 val cfg_raw : string cfg
 val read_arg : 'a cfg -> source -> 'a

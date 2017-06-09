@@ -1,8 +1,8 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: eb05e2dc7063ff71441d13ea2d4f6d9b) *)
+(* DO NOT EDIT (digest: bc871261b9116632bd0296585186e125) *)
 
-TexML - Defines simple parsers for LaTeX-like strings
-=====================================================
+ocaml-latexp - Defines simple parsers for LaTeX-like strings
+============================================================
 
 See the file [INSTALL.txt](INSTALL.txt) for building and installation
 instructions.
@@ -12,7 +12,7 @@ instructions.
 Copyright and license
 ---------------------
 
-TexML is distributed under the terms of the GNU Lesser General Public License
-version 2.1 with OCaml linking exception.
+ocaml-latexp is distributed under the terms of the GNU Lesser General Public
+License version 2.1 with OCaml linking exception.
 
 (* OASIS_STOP *)

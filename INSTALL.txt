@@ -1,7 +1,7 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 85f8a8ee137a056c5c9bb4a0f7978d5d) *)
+(* DO NOT EDIT (digest: c89ad5bca77d598b7e52f71034431269) *)
 
-This is the INSTALL file for the TexML distribution.
+This is the INSTALL file for the ocaml-latexp distribution.
 
 This package uses OASIS to generate its build system. See section OASIS for
 full information.
@@ -13,6 +13,7 @@ In order to compile this package, you will need:
 
 * ocaml for all, test main
 * findlib
+* eliom for library latexp
 * testsimple for executable test_main
 * prove for test main
 

@@ -1,8 +1,8 @@
 # OASIS_START
-# DO NOT EDIT (digest: 3c8e04cbee456ccd381ce428f2483010)
+# DO NOT EDIT (digest: dd134cd0ac3259d7b044fa8ad2be0c68)
 version = "0.1.0"
 description = "Defines simple parsers for LaTeX-like strings"
-requires = "str"
+requires = "str eliom.server threads"
 archive(byte) = "latexp.cma"
 archive(byte, plugin) = "latexp.cma"
 archive(native) = "latexp.cmxa"
