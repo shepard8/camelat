@@ -1,38 +1,76 @@
 open Eliom_content.Html.D
 
-type full = Html_types.flow5
-type phrasing = Html_types.phrasing
-type coint = Html_types.phrasing_without_interactive
+type pwi = Html_types.phrasing_without_interactive
+type pwl = Html_types.phrasing_without_label
+type p = Html_types.phrasing
+type f5 = Html_types.flow5
 
-let cfg_coint : coint elt list Tex.cfg = Tex.init (fun s -> [pcdata s]) List.concat
+let cfg_pwi : pwi elt list_wrap Tex.cfg = Tex.init (fun s -> [pcdata s]) List.concat
+let cfg_pwl : pwl elt list_wrap Tex.cfg = Tex.init (fun s -> [pcdata s]) List.concat
+let cfg_p : p elt list_wrap Tex.cfg = Tex.init (fun s -> [pcdata s]) List.concat
+let cfg_f5 : f5 elt list_wrap Tex.cfg = Tex.init (fun s -> [pcdata s]) List.concat
 
-let cfg_phrasing : phrasing elt list Tex.cfg = Tex.init (fun s -> [pcdata s]) List.concat
+let reg_wrap cfg name f sub =
+  Tex.register_cmd cfg name (fun s -> [f (Tex.read_arg sub s)])
 
-let cfg_full : full elt list Tex.cfg = Tex.init (fun s -> [pcdata s]) List.concat
+(* Bold, italic, underline, strike *)
+let reg_style cfg name style sub =
+  reg_wrap cfg name (fun a -> span ~a:[a_style style] a) sub
 
-let cmd_enclose name e sub = (name, fun s -> [e (Tex.read_arg sub s)])
-let cmd_stylize name style sub = cmd_enclose name (span ~a:[a_style style]) sub
+let () =
+  let styles = [
+    ("bold", "font-weight: bold;");
+    ("italic", "font-style: italic;");
+    ("underline", "text-decoration: underline;");
+    ("strike", "text-decoration: line-through;")
+  ] in
+  List.iter (fun (n, s) -> reg_style cfg_pwi n s cfg_pwi) styles;
+  List.iter (fun (n, s) -> reg_style cfg_pwl n s cfg_p) styles;
+  List.iter (fun (n, s) -> reg_style cfg_p n s cfg_p) styles;
+  List.iter (fun (n, s) -> reg_style cfg_f5 n s cfg_p) styles
 
-let f_newline = ("newline", fun s -> [br ()])
+(* Color *)
+let reg_color cfg sub =
+  Tex.register_cmd cfg "color" (fun s ->
+    let color = Tex.read_arg Tex.cfg_raw s in
+    let arg = Tex.read_arg sub s in
+    [span ~a:[a_style ("color: " ^ color ^ ";")] arg])
 
-let f_italic sub = cmd_stylize "italic" "font-style: italic;" sub
-let f_bold sub = cmd_stylize "bold" "font-weight: bold;" sub
-let f_underline sub = cmd_stylize "underline" "text-decoration: underline;" sub
-let f_strike sub = cmd_stylize "strike" "text-decoration: line-through;" sub
-let f_color sub = ("color", fun s ->
-  let color = Tex.read_arg Tex.cfg_raw s in
-  let arg = Tex.read_arg sub s in
-  [ span ~a:[a_style ("color: " ^ color ^ ";")] arg ])
+let () =
+  reg_color cfg_pwi cfg_pwi;
+  reg_color cfg_pwl cfg_p;
+  reg_color cfg_p cfg_p;
+  reg_color cfg_f5 cfg_p
 
-let f_link = ("link", fun s ->
-  let url = Tex.read_opt Tex.cfg_raw "" s in
-  if url = "" then
-    let arg = Tex.read_opt Tex.cfg_raw "" s in
-    [ Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg] ]
-  else
-    let arg = Tex.read_arg cfg_coint s in
-    [ Raw.a ~a:[a_href (uri_of_string (fun () -> url))] arg ]
-)
+(* Link *)
+let reg_link cfg =
+  Tex.register_cmd cfg "link" (fun s ->
+    let url = Tex.read_opt Tex.cfg_raw "" s in
+    if url = "" then
+      let arg = Tex.read_opt Tex.cfg_raw "" s in
+      [ Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg] ]
+    else
+      let arg = Tex.read_arg cfg_pwi s in
+      [ Raw.a ~a:[a_href (uri_of_string (fun () -> url))] arg ]
+  )
+
+let () =
+  reg_link cfg_pwl;
+  reg_link cfg_p
+
+let () =
+  Tex.register_cmd cfg_f5 "link" (fun s ->
+    let url = Tex.read_opt Tex.cfg_raw "" s in
+    if url = "" then
+      let arg = Tex.read_opt Tex.cfg_raw "" s in
+      [ Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg] ]
+    else
+      let arg = (Tex.read_arg cfg_pwi s :> Html_types.flow5_without_interactive elt list_wrap) in
+      [ Raw.a ~a:[a_href (uri_of_string (fun () -> url))] arg ]
+  )
+
+
+  (*
 
 let f_image = ("image", fun s ->
   let alt = Tex.read_opt Tex.cfg_raw "" s in
@@ -42,57 +80,50 @@ let f_image = ("image", fun s ->
   [ img ~alt ~src () ]
 )
 
-let f_section = cmd_enclose "section" h3 cfg_phrasing
-let f_subsection = cmd_enclose "subsection" h4 cfg_phrasing
-let f_subsubsection = cmd_enclose "subsubsection" h5 cfg_phrasing
+let f_section = cmd_enclose "section" h3 cfg_p
+let f_subsection = cmd_enclose "subsection" h4 cfg_p
+let f_subsubsection = cmd_enclose "subsubsection" h5 cfg_p
 
 let f_size sub = ("size", fun s ->
   let size = Tex.read_arg Tex.cfg_raw s in
   let arg = Tex.read_arg sub s in
   [ span ~a:[a_style ("font-size: " ^ size ^ ";")] arg ])
 
-type tfull = string * (string -> full elt list)
-type tphrasing = string * (string -> phrasing elt list)
-type tcoint = string * (string -> coint elt list)
-
 let c_full = [
-  f_newline;
-  f_italic cfg_phrasing;
-  f_bold cfg_phrasing;
-  f_underline cfg_phrasing;
-  (f_link : tphrasing :> tfull);
-  f_image;
-  f_color cfg_phrasing;
-  f_section; f_subsection; f_subsubsection;
-  f_size cfg_phrasing;
-]
-let c_phrasing = [
-  f_newline;
-  f_italic cfg_phrasing;
-  f_bold cfg_phrasing;
-  f_underline cfg_phrasing;
+  f_italic cfg_p;
+  f_bold cfg_p;
+  f_underline cfg_p;
   f_link;
   f_image;
-  f_color cfg_phrasing;
-  f_size cfg_phrasing;
+  f_color cfg_p;
+  f_section; f_subsection; f_subsubsection;
+  f_size cfg_p;
+]
+let c_phrasing = [
+  f_italic cfg_p;
+  f_bold cfg_p;
+  f_underline cfg_p;
+  f_link;
+  f_image;
+  f_color cfg_p;
+  f_size cfg_p;
 ]
 let c_coint = [
-  f_newline;
-  f_italic cfg_coint;
-  f_bold cfg_coint;
-  f_underline cfg_coint;
+  f_italic cfg_pwi;
+  f_bold cfg_pwi;
+  f_underline cfg_pwi;
   f_image;
-  f_color cfg_coint;
-  f_size cfg_coint;
+  f_color cfg_pwi;
+  f_size cfg_pwi;
 ]
 
 let () =
-  List.iter (fun (csname, f) -> Tex.register_cmd cfg_full csname f) c_full;
-  List.iter (fun (csname, f) -> Tex.register_cmd cfg_phrasing csname f) c_phrasing;
-  List.iter (fun (csname, f) -> Tex.register_cmd cfg_coint csname f) c_coint
-
+  List.iter (fun (csname, f) -> Tex.register_cmd cfg_f5 csname f) c_full;
+  List.iter (fun (csname, f) -> Tex.register_cmd cfg_p csname f) c_phrasing;
+  List.iter (fun (csname, f) -> Tex.register_cmd cfg_pwi csname f) c_coint
+(*
 let env_enclose name e =
-  Tex.register_env cfg_full name (fun _ -> ()) (fun () -> cfg_full) (fun () c -> e c)
+  Tex.register_env cfg_f5 name (fun _ -> ()) (fun () -> cfg_f5) (fun () c -> e c)
 let env_stylize name style = env_enclose name (fun c -> [div ~a:[a_style style] c])
 
 let () =
@@ -102,3 +133,21 @@ let () =
   env_stylize "lfloat" "float: left;";
   env_stylize "rfloat" "float: right;"
 
+let secret_id = ref 0
+let newsecretid () =
+  incr secret_id;
+  string_of_int (!secret_id)
+
+let () =
+  Tex.register_env cfg_f5 "secret"
+  (fun s ->
+    let labelcontent = Tex.read_opt cfg_p [pcdata "Secret (cliquez pour afficher/cacher)"] s in
+    (labelcontent, newsecretid ()))
+  (fun _ -> cfg_f5)
+  (fun (labelcontent, secret_id) content -> [div ~a:[a_class ["secret"]] [
+    label ~a:[a_label_for secret_id] labelcontent;
+    input ~a:[a_id secret_id; a_class ["secretcb"]; a_input_type `Checkbox] ();
+    div ~a:[a_class ["secretdiv"]] content
+  ]])
+  *)
+*)
