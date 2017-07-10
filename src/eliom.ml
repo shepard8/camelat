@@ -2,15 +2,21 @@ open Eliom_content.Html.D
 
 type 'a cfg = 'a Tex.cfg
 
+let r_nl = Str.regexp "$"
+let text s =
+  let parts = Str.split (Str.regexp "$") s in
+  let parts = List.rev_map pcdata parts in
+  List.fold_left (fun acc t -> t :: br () :: acc) [List.hd parts] (List.tl parts)
+
 type pwi = Html_types.phrasing_without_interactive
 type pwl = Html_types.phrasing_without_label
 type p = Html_types.phrasing
 type f5 = Html_types.flow5
 
-let cfg_pwi : pwi elt list_wrap cfg = Tex.init (fun s -> [pcdata s]) List.concat
-let cfg_pwl : pwl elt list_wrap cfg = Tex.init (fun s -> [pcdata s]) List.concat
-let cfg_p : p elt list_wrap cfg = Tex.init (fun s -> [pcdata s]) List.concat
-let cfg_f5 : f5 elt list_wrap cfg = Tex.init (fun s -> [pcdata s]) List.concat
+let cfg_pwi : pwi elt list_wrap cfg = Tex.init text List.concat
+let cfg_pwl : pwl elt list_wrap cfg = Tex.init text List.concat
+let cfg_p : p elt list_wrap cfg = Tex.init text List.concat
+let cfg_f5 : f5 elt list_wrap cfg = Tex.init text List.concat
 
 let reg_wrap cfg name f sub =
   Tex.register_cmd cfg name (fun s -> [f (Tex.read_arg sub s)])
