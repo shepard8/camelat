@@ -27,11 +27,25 @@ let reg_style cfg name style sub =
 
 let () =
   let styles = [
-    ("bold", "font-weight: bold;");
-    ("italic", "font-style: italic;");
-    ("underline", "text-decoration: underline;");
-    ("strike", "text-decoration: line-through;")
-  ] in
+    ("textbf", "font-weight: bold");
+    ("textit", "font-style: italic");
+    ("underline", "text-decoration: underline");
+    ("sout", "text-decoration: line-through");
+    ("textrm", "font-family: serif");
+    ("textsf", "font-family: sans-serif");
+    ("texttt", "font-family: monospace");
+    ("textsc", "font-variant: small-caps");
+    ("tiny", "font-size: 6pt");
+    ("scriptsize", "font-size: 8pt");
+    ("footnotesize", "font-size: 9pt");
+    ("small", "font-size: 10pt");
+    ("normalsize", "font-size: 10.95pt");
+    ("large", "font-size: 12pt");
+    ("Large", "font-size: 14.4pt");
+    ("LARGE", "font-size: 17.28pt");
+    ("huge", "font-size: 20.74pt");
+    ("Huge", "font-size: 24.88pt");
+   ] in
   List.iter (fun (n, s) -> reg_style cfg_pwi n s cfg_pwi) styles;
   List.iter (fun (n, s) -> reg_style cfg_pwl n s cfg_p) styles;
   List.iter (fun (n, s) -> reg_style cfg_p n s cfg_p) styles;
@@ -39,7 +53,7 @@ let () =
 
 (* Color *)
 let reg_color cfg sub =
-  Tex.register_cmd cfg "color" (fun s ->
+  Tex.register_cmd cfg "textcolor" (fun s ->
     let color = Tex.read_arg Tex.cfg_raw s in
     let arg = Tex.read_arg sub s in
     [ span ~a:[a_style ("color: " ^ color ^ ";")] arg ]
@@ -50,28 +64,6 @@ let () =
   reg_color cfg_pwl cfg_p;
   reg_color cfg_p cfg_p;
   reg_color cfg_f5 cfg_p
-
-(* Size *)
-(* A sole number is considered a percentage. Otherwise we assume the unit is
- * given. *)
-let reg_size cfg sub =
-  Tex.register_cmd cfg "size" (fun s ->
-    let size = Tex.read_arg Tex.cfg_raw s in
-    let size = try
-      ignore (int_of_string size);
-      size ^ "%"
-    with
-    | Failure "int_of_string" -> size
-    in
-    let arg = Tex.read_arg sub s in
-    [ span ~a:[a_style ("font-size: " ^ size ^ ";")] arg ]
-  )
-
-let () =
-  reg_size cfg_pwi cfg_pwi;
-  reg_size cfg_pwl cfg_p;
-  reg_size cfg_p cfg_p;
-  reg_size cfg_f5 cfg_p
 
 (* Sectionning *)
 let () =
