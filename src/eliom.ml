@@ -101,61 +101,14 @@ let () =
       [ Raw.a ~a:[a_href (uri_of_string (fun () -> url))] arg ]
   )
 
-(* Alignment *)
-let reg_align where =
-  Tex.register_env cfg_f5 where (fun s -> ()) (fun () -> cfg_f5)
-  (fun () content -> [div ~a:[a_style ("text-align: " ^ where)] content])
+(* List *)
+let cfg_item = Tex.init (fun _ -> []) List.concat
+let () =
+  Tex.register_cmd cfg_item "item" (fun s -> [li (Tex.read_item cfg_f5 "item" s)])
 
 let () =
-  reg_align "left";
-  reg_align "right";
-  reg_align "center"
-
-(* Floating *)
-let reg_float where =
-  Tex.register_env cfg_f5 ("f" ^ where) (fun s -> ()) (fun () -> cfg_f5)
-  (fun () content -> [div ~a:[a_style ("float: " ^ where)] content])
-
-let () =
-  reg_float "left";
-  reg_float "right";
-  Tex.register_cmd cfg_f5 "clearer" (fun s ->
-    [ div ~a:[a_style "clear: both;"] [] ]
-  )
-
-(* Image *)
-let reg_image cfg =
-  Tex.register_cmd cfg "image" (fun s ->
-    let title = Tex.read_opt Tex.cfg_raw "User image" s in
-    let url = Tex.read_arg Tex.cfg_raw s in
-    let src = Xml.uri_of_string url in
-    let alt = Tex.read_arg Tex.cfg_raw s in
-    [ img ~alt ~src ~a:[a_title title] () ]
-  )
-
-let () =
-  reg_image cfg_f5;
-  reg_image cfg_p;
-  reg_image cfg_pwi;
-  reg_image cfg_pwl
-
-(* Secret *)
-let secret_id = ref 0
-let newsecretid () =
-  incr secret_id;
-  string_of_int (!secret_id)
-
-let () =
-  Tex.register_env cfg_f5 "secret"
-  (fun s ->
-    let defaulttext = "Secret (click to show/hide)" in
-    let labelcontent = Tex.read_opt cfg_pwl s [pcdata defaulttext] in
-    (labelcontent, newsecretid ())
-  )
-  (fun _ -> cfg_f5)
-  (fun (labelcontent, sid) content -> [
-    label ~a:[a_label_for sid] labelcontent;
-    input ~a:[a_id sid; a_class ["secretcb"]; a_input_type `Checkbox] ();
-    div ~a:[a_class ["secretdiv"]] content
-  ])
+  Tex.register_env cfg_f5 "itemize"
+  (fun _ -> ())
+  (fun () -> cfg_item)
+  (fun () content -> [ul content])
 

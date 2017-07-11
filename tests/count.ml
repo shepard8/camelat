@@ -6,6 +6,7 @@ let rec power p x = match p with
 | i -> x * power (p - 1) x
 
 let cfg_count = Tex.init String.length (List.fold_left ( + ) 0)
+let cfg_list = Tex.init (fun _ -> [0]) List.concat
 let () =
   Tex.register_cmd cfg_count "double" (fun s ->
     2 * (Tex.read_arg cfg_count s)
@@ -43,25 +44,37 @@ let () =
     );
     cfg'
   )
-  (fun _ c -> print_endline c; int_of_string c)
+  (fun _ c -> print_endline c; int_of_string c);
+  Tex.register_env cfg_count "max"
+  (fun _ -> ())
+  (fun () -> cfg_list)
+  (fun () l -> List.fold_left max 0 l);
+  Tex.register_cmd cfg_list "it" (fun s -> [Tex.read_item cfg_count "it" s])
 
-let count = 10
-let tests () =
-  is 5 (Tex.parse cfg_count "abcde") "Only text";
-  is 45 (Tex.parse cfg_count "{\\truth}abc") "Using a command";
-  is 12 (Tex.parse cfg_count "1234\\double{abcd}") "One argument";
-  is 4 (Tex.parse cfg_count "a\\double bc") "Argument without braces";
-  is 15 (Tex.parse cfg_count "abc\\power{abc}abc") "Optional argument (not given)";
-  is 33 (Tex.parse cfg_count "abc\\power[3]{abc}abc") "Optional argument (given)";
-  is 6 (Tex.parse cfg_count "abc\\begin{cancel}abc\\end{cancel}abc") "Environment";
-  is (30+84) (
-    Tex.parse cfg_count
-    "abc{\\truth}abc\\begin{altdouble}{4}abc\\double{bla}abc\\end{altdouble}abc{\\truth}abc"
-  ) "Environment redefining things";
-  is 42 (
-    Tex.parse cfg_count "abc\\begin{lit}36\\end{lit}abc"
-  ) "Environment using sub-config with a different type";
-  is 15 (
-    Tex.parse cfg_count "\\begin{lit}3\\double{6}\\end{lit}"
-  ) "Command in an environment using sub-config with a different type"
+let testslist = [
+  (5, "abcde", "Only text");
+  (45, "{\\truth}abc", "Using a command");
+  (12, "1234\\double{abcd}", "One argument");
+  (4, "a\\double bc", "Argument without braces");
+  (15, "abc\\power{abc}abc", "Optional argument (not given)");
+  (33, "abc\\power[3]{abc}abc", "Optional argument (given)");
+  (6, "abc\\begin{cancel}abc\\end{cancel}abc", "Environment");
+  (114, "abc{\\truth}abc\\begin{altdouble}{4}abc\\double{bla}abc\\end{altdouble}abc{\\truth}abc",
+  "Environment redefining things");
+  (42, "abc\\begin{lit}36\\end{lit}abc",
+  "Environment using sub-config with a different type");
+  (15, "\\begin{lit}3\\double{6}\\end{lit}",
+  "Command in an environment using sub-config with a different type");
+  (0, "\\begin{max}\\end{max}", "Empty items list");
+  (10, "coucou\\begin{max}\\end{max}test",
+  "Empty items list with surrounding text");
+  (10, "\\begin{max}\\it abc\\it coucou\\it coucoutest\\end{max}",
+  "Simple items list");
+  (42, "\\begin{max}\\it \\truth\\it \\double{abcde}\\end{max}",
+  "Simple items list with commands");
+  (42, "\\begin{max}\\it \\begin{max}\\it abc\\it{abcde}\\end{max}\\it \\begin{max}\\it \\truth\\it \\double{abcde}\\end{max}\\end{max}",
+  "Test nested lists");
+]
 
+let count = List.length testslist
+let tests () = List.iter (fun (n, s, c) -> is n (Tex.parse cfg_count s) c) testslist

@@ -96,6 +96,14 @@ let read_opt (cfg : 'a cfg) (s : source) (default : 'a) : 'a =
     default
   end
 
+let read_item (cfg : 'a cfg) (cmd : csname) (s : source) : 'a =
+  ignore (Str.string_match r_spaces s (Str.match_end ()));
+  let i = Str.match_end () in
+  let r = Str.regexp ("\\\\end{\\|\\\\" ^ cmd) in
+  let (content, i) = read_until cfg ~r s i in
+  let i = Str.match_beginning () in
+  assert (Str.string_match r_empty s i); (* Reset Str.match_end pointer *)
+  cfg.group content
 
 (* Populating the config *)
 

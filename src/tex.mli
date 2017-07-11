@@ -13,6 +13,7 @@ val register_env : 'a cfg -> csname -> (source -> 'b) -> ('b -> 'c cfg) -> ('b -
 val cfg_raw : string cfg
 val read_arg : 'a cfg -> source -> 'a
 val read_opt : 'a cfg -> source -> 'a -> 'a
+val read_item : 'a cfg -> csname -> source -> 'a
 
 (** Parsing *)
 val parse : 'a cfg -> source -> 'a
