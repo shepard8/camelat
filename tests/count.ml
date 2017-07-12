@@ -81,7 +81,6 @@ let testslist = [
 
 let count = List.length testslist
 let tests () = List.iter (fun (n, s, c) ->
-  let r = Tex.parse cfg_count s in
   match Tex.parse cfg_count s with
   | Ok n' -> is n' n c
   | Error (n', errors) ->
