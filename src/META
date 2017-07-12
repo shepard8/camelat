@@ -1,12 +1,12 @@
 # OASIS_START
-# DO NOT EDIT (digest: dd134cd0ac3259d7b044fa8ad2be0c68)
+# DO NOT EDIT (digest: d0862e731665478fe298ed81cd29109e)
 version = "0.1.0"
-description = "Defines simple parsers for LaTeX-like strings"
+description = "Parsing LaTeX-like text in OCaml"
 requires = "str eliom.server threads"
-archive(byte) = "latexp.cma"
-archive(byte, plugin) = "latexp.cma"
-archive(native) = "latexp.cmxa"
-archive(native, plugin) = "latexp.cmxs"
-exists_if = "latexp.cma"
+archive(byte) = "camelat.cma"
+archive(byte, plugin) = "camelat.cma"
+archive(native) = "camelat.cmxa"
+archive(native, plugin) = "camelat.cmxs"
+exists_if = "camelat.cma"
 # OASIS_STOP
 

@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: c3fe640edf88dcb66c9fc161f41cfcdf) *)
+(* DO NOT EDIT (digest: 3e46fc788b6092c1047d36e1a6a1057e) *)
 module OASISGettext = struct
 (* # 22 "src/oasis/OASISGettext.ml" *)
 
@@ -879,7 +879,7 @@ end
 open Ocamlbuild_plugin;;
 let package_default =
   {
-     MyOCamlbuildBase.lib_ocaml = [("latexp", ["src"], [])];
+     MyOCamlbuildBase.lib_ocaml = [("camelat", ["src"], [])];
      lib_c = [];
      flags = [];
      includes = [("tests", ["src"])]

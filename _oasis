@@ -1,23 +1,23 @@
 OASISFormat:      0.4
-Name:             ocaml-latexp
+Name:             Camelat
 Version:          0.1.0
-Synopsis:         Defines simple parsers for LaTeX-like strings
+Synopsis:         Parsing LaTeX-like text in OCaml
 Authors:          Fabian Pijcke <fabian@pijcke.net>
 License:          LGPL-2.1 with OCaml linking exception
 Homepage:         https://github.com/shepard8/ocaml-latexp
 Plugins:          META (0.4), StdFiles (0.4), DevFiles (0.4)
 PreBuildCommand:  make -C examples clean
 
-Library latexp
+Library camelat
   Path:           src
   BuildTools:     ocamlbuild
   BuildDepends:   str, eliom.server, threads
-  Modules:        Tex, Eliom
+  Modules:        Cfg, Eliom
 
 Executable test_main
   Path:           tests
   BuildTools:     ocamlbuild
-  BuildDepends:   testsimple, latexp
+  BuildDepends:   testsimple, camelat
   MainIs:         main.ml
 
 Test main

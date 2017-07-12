@@ -1,5 +1,5 @@
 all:
-	ocamlc -o simple str.cma -I ../../_build/src/ tex.cmo simple.ml
+	ocamlc -o simple str.cma -I ../../_build/src/ camelat.cma simple.ml
 	./simple
 
 clean:

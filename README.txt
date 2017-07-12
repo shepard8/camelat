@@ -1,8 +1,8 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: bc871261b9116632bd0296585186e125) *)
+(* DO NOT EDIT (digest: 9585fc42ed52d93d43b86f453d7da035) *)
 
-ocaml-latexp - Defines simple parsers for LaTeX-like strings
-============================================================
+Camelat - Parsing LaTeX-like text in OCaml
+==========================================
 
 See the file [INSTALL.txt](INSTALL.txt) for building and installation
 instructions.
@@ -12,7 +12,7 @@ instructions.
 Copyright and license
 ---------------------
 
-ocaml-latexp is distributed under the terms of the GNU Lesser General Public
+Camelat is distributed under the terms of the GNU Lesser General Public
 License version 2.1 with OCaml linking exception.
 
 (* OASIS_STOP *)

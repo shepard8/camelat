@@ -1,7 +1,7 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 53625d640b4ca6f5d3118cbfd302c2cc) *)
+(* DO NOT EDIT (digest: a4b3f2f75b3a58073db505cefe1e70da) *)
 
-Authors of ocaml-latexp:
+Authors of Camelat:
 
 * Fabian Pijcke <fabian@pijcke.net>
 

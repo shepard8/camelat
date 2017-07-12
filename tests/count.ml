@@ -5,51 +5,51 @@ let rec power p x = match p with
 | x when x <= 0 -> 1
 | i -> x * power (p - 1) x
 
-let cfg_count = Tex.init String.length (List.fold_left ( + ) 0)
-let cfg_list = Tex.init (fun _ -> [0]) List.concat
+let cfg_count = Cfg.init String.length (List.fold_left ( + ) 0)
+let cfg_list = Cfg.init (fun _ -> [0]) List.concat
 let () =
-  Tex.register_cmd cfg_count "double" (fun s ->
-    2 * (Tex.read_arg cfg_count s)
+  Cfg.register_cmd cfg_count "double" (fun s ->
+    2 * (Cfg.read_arg cfg_count s)
   );
-  Tex.register_cmd cfg_count "truth" (fun s -> 10);
-  Tex.register_cmd cfg_count "truth" (fun s -> 42);
-  Tex.register_cmd cfg_count "power" (fun s ->
-    let p = (Tex.read_opt Tex.cfg_int s 2) in
-    let v = Tex.read_arg cfg_count s in
+  Cfg.register_cmd cfg_count "truth" (fun s -> 10);
+  Cfg.register_cmd cfg_count "truth" (fun s -> 42);
+  Cfg.register_cmd cfg_count "power" (fun s ->
+    let p = (Cfg.read_opt Cfg.cfg_int s 2) in
+    let v = Cfg.read_arg cfg_count s in
     power p v
   );
-  Tex.register_env cfg_count "cancel"
+  Cfg.register_env cfg_count "cancel"
   (fun _ -> ())
   (fun () -> cfg_count)
   (fun () _ -> 0);
-  Tex.register_env cfg_count "altdouble"
-  (fun s -> Tex.read_arg Tex.cfg_int s)
+  Cfg.register_env cfg_count "altdouble"
+  (fun s -> Cfg.read_arg Cfg.cfg_int s)
   (fun v ->
-    let cfg' = Tex.copy cfg_count in
-    Tex.register_cmd cfg' "double" (fun s ->
-      let w = Tex.read_arg cfg' s in
+    let cfg' = Cfg.copy cfg_count in
+    Cfg.register_cmd cfg' "double" (fun s ->
+      let w = Cfg.read_arg cfg' s in
       v * w
     );
     cfg')
   (fun _ c -> c);
-  Tex.register_env cfg_count "lit"
+  Cfg.register_env cfg_count "lit"
   (fun _ -> ())
   (fun () ->
-    let cfg' = Tex.init (fun s -> s) (fun l ->
+    let cfg' = Cfg.init (fun s -> s) (fun l ->
       string_of_int (List.fold_left (fun acc x -> acc + int_of_string x) 0 l))
     in
-    Tex.register_cmd cfg' "double" (fun s ->
-      let v = Tex.read_arg cfg' s in
+    Cfg.register_cmd cfg' "double" (fun s ->
+      let v = Cfg.read_arg cfg' s in
       Printf.sprintf "%d" (2 * int_of_string v)
     );
     cfg'
   )
   (fun _ c -> print_endline c; int_of_string c);
-  Tex.register_env cfg_count "max"
+  Cfg.register_env cfg_count "max"
   (fun _ -> ())
   (fun () -> cfg_list)
   (fun () l -> List.fold_left max 0 l);
-  Tex.register_cmd cfg_list "it" (fun s -> [Tex.read_item cfg_count "it" s])
+  Cfg.register_cmd cfg_list "it" (fun s -> [Cfg.read_item cfg_count "it" s])
 
 let testslist = [
   (0, "", "Empty text");
@@ -81,16 +81,16 @@ let testslist = [
 
 let count = List.length testslist
 let tests () = List.iter (fun (n, s, c) ->
-  match Tex.parse cfg_count s with
+  match Cfg.parse cfg_count s with
   | Ok n' -> is n' n c
   | Error (n', errors) ->
       print_endline (c ^ " :");
       List.iter (fun (i, m) ->
         Printf.printf "\t%d : %s\n" i (match m with
-        | Tex.Unknown_command csname -> "Unknown command " ^ csname
-        | Tex.Unknown_environment csname -> "Unknown environment " ^ csname
-        | Tex.Misplaced_end csname -> "Misplaced end " ^ csname
-        | Tex.Unexpected_eof -> "Unexpected EOF"
+        | Cfg.Unknown_command csname -> "Unknown command " ^ csname
+        | Cfg.Unknown_environment csname -> "Unknown environment " ^ csname
+        | Cfg.Misplaced_end csname -> "Misplaced end " ^ csname
+        | Cfg.Unexpected_eof -> "Unexpected EOF"
       )) errors;
       is n' n c
 ) testslist
