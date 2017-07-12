@@ -1,12 +1,7 @@
 (* TODO
-   - Add environment support
    - Add inline/display support
-   - Add unit tests
-   - Add Eliom default config
    - Add config merge support
 *)
-
-exception End_of_stream
 
 module CfgMap = Map.Make (struct type t = string let compare = compare end)
 
@@ -21,15 +16,12 @@ let r_empty = Str.regexp ""
 let r_cmd = Str.regexp "\\\\\\([a-zA-Z]+\\)"
 let r_text = Str.regexp "[^]\\\\{}]+"
 let r_spaces = Str.regexp "[ \t\r\n]*"
-let r_arg = Str.regexp "{\\([^}]*\\)}"
-let r_opt = Str.regexp "\\[\\([^]]*\\)\\]"
 let r_any = Str.regexp "."
 let r_openbrace = Str.regexp "{"
 let r_closebrace = Str.regexp "}"
 let r_openbracket = Str.regexp "\\["
 let r_closebracket = Str.regexp "\\]"
 let r_envend env = Str.regexp ("\\\\end{" ^ env ^ "}")
-
 
 (* Parsing *)
 
@@ -70,11 +62,13 @@ let parse (cfg : 'a cfg) (s : source) =
 
 (* Helpers *)
 (* The following function must be "safe" w.r.t. Str.match_end (). *)
-(*let read_env_content*)
+
+let skip_spaces s =
+  ignore (Str.string_match r_spaces s (Str.match_end ()));
+  Str.match_end ()
 
 let read_arg (cfg : 'a cfg) (s : source) : 'a =
-  ignore (Str.string_match r_spaces s (Str.match_end ()));
-  let i = Str.match_end () in
+  let i = skip_spaces s in
   if Str.string_match r_openbrace s i then
     let f = CfgMap.find "@group" (cfg.cmds) in
     let i = Str.match_end () in
@@ -85,9 +79,8 @@ let read_arg (cfg : 'a cfg) (s : source) : 'a =
   else assert false
 
 let read_opt (cfg : 'a cfg) (s : source) (default : 'a) : 'a =
-  let i = Str.match_end () in
-  ignore (Str.string_match r_spaces s i);
-  if Str.string_match r_openbracket s (Str.match_end ()) then
+  let i = skip_spaces s in
+  if Str.string_match r_openbracket s i then
     let f = CfgMap.find "@opt" (cfg.cmds) in
     let i = Str.match_end () in
     fst (f s i)
@@ -97,8 +90,7 @@ let read_opt (cfg : 'a cfg) (s : source) (default : 'a) : 'a =
   end
 
 let read_item (cfg : 'a cfg) (cmd : csname) (s : source) : 'a =
-  ignore (Str.string_match r_spaces s (Str.match_end ()));
-  let i = Str.match_end () in
+  let i = skip_spaces s in
   let r = Str.regexp ("\\\\end{\\|\\\\" ^ cmd) in
   let (content, i) = read_until cfg ~r s i in
   let i = Str.match_beginning () in
@@ -150,7 +142,7 @@ let init (ftext : string -> 'a) (fgroup : 'a list -> 'a) =
   ) (cfg.cmds);
   cfg
 
-let copy cfg = { cfg with cmds = cfg.cmds }
+let copy cfg = { cfg with cmds = cfg.cmds } (* CHECK ME *)
 
   (* TODO restrict if cfg_raw *)
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : unit =
