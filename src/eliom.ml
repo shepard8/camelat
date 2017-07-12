@@ -74,9 +74,9 @@ let () =
 (* Link *)
 let reg_link cfg =
   Tex.register_cmd cfg "link" (fun s ->
-    let url = Tex.read_opt Tex.cfg_raw "" s in
+    let url = Tex.read_opt Tex.cfg_raw s "" in
     if url = "" then
-      let arg = Tex.read_opt Tex.cfg_raw "" s in
+      let arg = Tex.read_opt Tex.cfg_raw s "" in
       [ Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg] ]
     else
       let arg = Tex.read_arg cfg_pwi s in
@@ -89,9 +89,9 @@ let () =
 
 let () =
   Tex.register_cmd cfg_f5 "link" (fun s ->
-    let url = Tex.read_opt Tex.cfg_raw "" s in
+    let url = Tex.read_opt Tex.cfg_raw s "" in
     if url = "" then
-      let arg = Tex.read_opt Tex.cfg_raw "" s in
+      let arg = Tex.read_opt Tex.cfg_raw s "" in
       [ Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg] ]
     else
       let arg = (Tex.read_arg cfg_pwi s :

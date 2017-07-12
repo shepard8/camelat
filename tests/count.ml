@@ -52,10 +52,13 @@ let () =
   Tex.register_cmd cfg_list "it" (fun s -> [Tex.read_item cfg_count "it" s])
 
 let testslist = [
+  (0, "", "Empty text");
   (5, "abcde", "Only text");
-  (45, "{\\truth}abc", "Using a command");
-  (12, "1234\\double{abcd}", "One argument");
-  (4, "a\\double bc", "Argument without braces");
+  (48, "abc{\\truth}abc", "Using a command");
+  (8, "\\double{abcd}", "One argument");
+  (15, "1234\\double{abcd}abc", "One argument, surrounding text");
+  (2, "\\double a", "Argument without braces");
+  (7, "abc\\double bcd", "Argument without braces, surrounding text");
   (15, "abc\\power{abc}abc", "Optional argument (not given)");
   (33, "abc\\power[3]{abc}abc", "Optional argument (given)");
   (6, "abc\\begin{cancel}abc\\end{cancel}abc", "Environment");
@@ -77,4 +80,19 @@ let testslist = [
 ]
 
 let count = List.length testslist
-let tests () = List.iter (fun (n, s, c) -> is n (Tex.parse cfg_count s) c) testslist
+let tests () = List.iter (fun (n, s, c) ->
+  let r = Tex.parse cfg_count s in
+  match Tex.parse cfg_count s with
+  | Ok n' -> is n' n c
+  | Error (n', errors) ->
+      print_endline (c ^ " :");
+      List.iter (fun (i, m) ->
+        Printf.printf "\t%d : %s\n" i (match m with
+        | Tex.Unknown_command csname -> "Unknown command " ^ csname
+        | Tex.Unknown_environment csname -> "Unknown environment " ^ csname
+        | Tex.Misplaced_end csname -> "Misplaced end " ^ csname
+        | Tex.Unexpected_eof -> "Unexpected EOF"
+      )) errors;
+      is n' n c
+) testslist
+

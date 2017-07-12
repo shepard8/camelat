@@ -9,7 +9,18 @@ let service_result =
       html (
         head (title (pcdata "TexML Web Example")) []
       ) (
-        body (Tex.parse Eliom.cfg_f5 text)
+        body (
+          match Tex.parse Eliom.cfg_f5 text with
+          | Ok v -> v
+          | Error (v, errors) -> pcdata "Errors : " ::
+            ul (List.map (fun (i, e) -> li [pcdata (Printf.sprintf "%d : %s" i
+            (match e with
+            | Tex.Unknown_command csname -> "Unknown command " ^ csname
+            | Tex.Unknown_environment csname -> "Unknown environment " ^ csname
+            | Tex.Misplaced_end csname -> "Misplaced end " ^ csname
+            | Tex.Unexpected_eof -> "Unexpected EOF"
+            ))]) errors) :: hr () :: v
+        )
       )))
 
 let service_home =

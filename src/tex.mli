@@ -1,4 +1,4 @@
-type source = string
+type source
 type csname = string
 type 'a cfg
 
@@ -14,13 +14,11 @@ val read_opt : 'a cfg -> source -> 'a -> 'a
 val read_item : 'a cfg -> csname -> source -> 'a
 
 (** Parsing *)
-(*type perror =
-  | Unclosed_environment of int
-  | Unclosed_group of int
-  | Unclosed_option of int
-  | Missing_argumnet of string * int
-  | Unexpected_option of string * int
-val parse : 'a cfg -> source -> ('a * ('a * string list)) result*)
+type perror =
+  | Unknown_command of csname
+  | Unknown_environment of csname
+  | Misplaced_end of csname
+  | Unexpected_eof
 
-val parse : 'a cfg -> source -> 'a
+val parse : 'a cfg -> string -> ('a, ('a * (int * perror) list)) result
 
