@@ -1,7 +1,7 @@
 all:
-	ocamlc -o simple -c -I ../../_build/src/ simple.ml
+	ocamlc -o simple str.cma -I ../../_build/src/ tex.cmo simple.ml
 	./simple
 
 clean:
-	rm -rf simple
+	rm -rf simple{,.cmo,.cmi}
 

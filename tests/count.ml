@@ -14,7 +14,7 @@ let () =
   Tex.register_cmd cfg_count "truth" (fun s -> 10);
   Tex.register_cmd cfg_count "truth" (fun s -> 42);
   Tex.register_cmd cfg_count "power" (fun s ->
-    let p = int_of_string (Tex.read_opt Tex.cfg_raw s "2") in
+    let p = (Tex.read_opt Tex.cfg_int s 2) in
     let v = Tex.read_arg cfg_count s in
     power p v
   );
@@ -23,7 +23,7 @@ let () =
   (fun () -> cfg_count)
   (fun () _ -> 0);
   Tex.register_env cfg_count "altdouble"
-  (fun s -> int_of_string (Tex.read_arg Tex.cfg_raw s))
+  (fun s -> Tex.read_arg Tex.cfg_int s)
   (fun v ->
     let cfg' = Tex.copy cfg_count in
     Tex.register_cmd cfg' "double" (fun s ->
@@ -62,7 +62,7 @@ let testslist = [
   (15, "abc\\power{abc}abc", "Optional argument (not given)");
   (33, "abc\\power[3]{abc}abc", "Optional argument (given)");
   (6, "abc\\begin{cancel}abc\\end{cancel}abc", "Environment");
-  (114, "abc{\\truth}abc\\begin{altdouble}{4}abc\\double{bla}abc\\end{altdouble}abc{\\truth}abc",
+  (42, "abc{\\double{abc}}abc\\begin{altdouble}{4}abc\\double{bla}abc\\end{altdouble}abc{\\double{abc}}abc",
   "Environment redefining things");
   (42, "abc\\begin{lit}36\\end{lit}abc",
   "Environment using sub-config with a different type");

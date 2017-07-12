@@ -51,6 +51,11 @@ val copy : 'a cfg -> 'a cfg
  * command to act differently in two distinct configurations while everything
  * else is kept unchanged. *)
 
+val inalterable : 'a cfg -> 'a cfg
+(** [inalterable cfg] makes [cfg] inalterable. That is, once applied, it is no
+ * longer possible to register additional commands nor environments to (this
+ * copy of) [cfg]. *)
+
 val register_cmd : 'a cfg -> csname -> (source -> 'a) -> unit
 (** [register_cmd cfg csname f] associates the action of [f] to the command
  * [csname] in [cfg]. You may want to have a look at {read_arg}, {read_opt} and
@@ -79,11 +84,21 @@ val read_item : 'a cfg -> csname -> source -> 'a
  * command or the end command is encountered. Its primary use is to parse LaTeX
  * lists. *)
 
-val cfg_raw : string cfg
-(** [cfg_raw] retrieves text with no formating at all. Add commands and
- * environments to this configuration at your own risk. [cfg_raw] is useful
+val cfg_text : string cfg
+(** [cfg_text] retrieves text with no formating at all. [cfg_text] is useful
  * when you have to retrieve arguments without processing them. For example as
- * in [let url = read_arg cfg_raw s]. *)
+ * in [let url = read_arg cfg_raw s]. You can not register commands nor
+ * environments to [cfg_text]. *)
+
+val cfg_int : int cfg
+(** [cfg_int] retrieves an integer. [cfg_int] is useful when you have to
+ * retrieve a number argument. You can not register commands nor environments
+ * to [cfg_int]. *)
+
+val cfg_float : float cfg
+(** [cfg_float retrieves a floating-point numebr. [cfg_float] is useful when
+ * you have to retrieve a floating-point number argument. You can not register
+ * commands nor environments to [cfg_float]. *)
 
 (** {1 Parsing} *)
 type perror =

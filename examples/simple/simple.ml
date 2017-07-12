@@ -78,7 +78,7 @@ let () =
     let a = match Tex.read_arg simplecfg s with "" -> '.' | a -> a.[0] in
     let b = match Tex.read_arg simplecfg s with "" -> '!' | b -> b.[0] in
     (a, b))
-  (fun _ -> Tex.cfg_raw) (* Do not parse content *)
+  (fun _ -> Tex.cfg_text) (* Do not parse content *)
   (fun (a, b) content ->
     String.map (function x when x = a -> b | c -> c) content
   )

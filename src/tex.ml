@@ -19,7 +19,8 @@ type source = {
 }
 type 'a cfg = {
   mutable cmds : (source -> 'a) CfgMap.t;
-  group : 'a list -> 'a
+  group : 'a list -> 'a;
+  alterable : bool;
 }
 
 let r_empty = Str.regexp ""
@@ -108,46 +109,50 @@ let read_item (cfg : 'a cfg) (cmd : csname) (s : source) : 'a =
 
 (* Populating the config *)
 
-  (* TODO restrict if cfg_raw *)
 let register_cmd (cfg : 'a cfg) (cmd : string) (f : source -> 'a) : unit =
-  cfg.cmds <- CfgMap.add cmd (fun (s : source) ->
-    f s
-  ) cfg.cmds
+  if cfg.alterable then
+    cfg.cmds <- CfgMap.add cmd f cfg.cmds
 
-  (* TODO restrict if cfg_raw *)
 let register_env (cfg : 'a cfg) (env : string) (init : source -> 'b) (subcfg : 'b -> 'c cfg) (f : 'b -> 'c -> 'a) : unit =
-  cfg.cmds <- CfgMap.add ("env@" ^ env) (fun (s : source) ->
-    let v = init s in
-    let subcfg = subcfg v in
-    let content = read_until subcfg ~r:(r_envend env) s in
-    f v (subcfg.group content)
-  ) cfg.cmds
+  if cfg.alterable then
+    cfg.cmds <- CfgMap.add ("env@" ^ env) (fun (s : source) ->
+      let v = init s in
+      let subcfg = subcfg v in
+      let content = read_until subcfg ~r:(r_envend env) s in
+      f v (subcfg.group content)
+    ) cfg.cmds
 
-let cfg_raw =
-  let cfg = { cmds = CfgMap.empty; group = String.concat "" } in
+let inalterable cfg = { cfg with alterable = false }
+
+let cfg_text =
+  let cfg = { cmds = CfgMap.empty; group = String.concat ""; alterable = true } in
   register_cmd cfg "@text" (fun s -> Str.matched_string s.text);
   register_cmd cfg "@group" (fun s -> cfg.group (read_until cfg ~r:r_closebrace s));
   register_cmd cfg "@opt" (fun s -> cfg.group (read_until cfg ~r:r_closebracket s));
-  cfg
+  inalterable cfg
 
 let init (ftext : string -> 'a) (fgroup : 'a list -> 'a) =
-  let cfg = { cmds = CfgMap.empty; group = fgroup } in
+  let cfg = { cmds = CfgMap.empty; group = fgroup; alterable = true } in
   register_cmd cfg "@text" (fun s -> ftext (Str.matched_string s.text));
   register_cmd cfg "@group" (fun s -> fgroup (read_until cfg ~r:r_closebrace s));
   register_cmd cfg "@opt" (fun s -> fgroup (read_until cfg ~r:r_closebracket s));
   register_cmd cfg "begin" (fun s ->
-    let e = read_arg cfg_raw s in
+    let e = read_arg cfg_text s in
     try (CfgMap.find ("env@" ^ e) cfg.cmds) s
     with Not_found ->
       adderror s (Unknown_environment e);
       ftext ("\\begin{" ^ e ^ "}")
   );
   register_cmd cfg "end" (fun s ->
-    let e = read_arg cfg_raw s in
+    let e = read_arg cfg_text s in
     adderror s (Misplaced_end e);
     ftext ("\\end{" ^ e ^ "}")
   );
   cfg
 
 let copy cfg = { cfg with cmds = cfg.cmds } (* CHECK ME *)
+
+let cfg_int = inalterable (init int_of_string (List.fold_left (+) 0))
+
+let cfg_float = inalterable (init float_of_string (List.fold_left (+.) 0.))
 
