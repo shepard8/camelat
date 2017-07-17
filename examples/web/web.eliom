@@ -23,6 +23,10 @@ let service_result =
         )
       )))
 
+let parse text = match Cfg.parse Eliom.cfg_pwi text with
+| Ok v -> v
+| Error (v, _) -> v
+
 let service_home =
   Eliom_registration.Html.create
   ~path:(Eliom_service.Path ["home"])
@@ -30,11 +34,21 @@ let service_home =
   (fun () () ->
     Lwt.return (
       html (
-        head (title (pcdata "TexML Web Example")) []
+        head (title (pcdata "TexML Web Example")) [
+          js_script ~uri:(make_uri (Eliom_service.static_dir ()) ["js"; "camelat.js"]) ();
+        ]
       ) (
         body [
           Form.post_form service_result (fun text -> [
-            Form.textarea ~a:[a_rows 20; a_cols 80] ~name:text ();
+            Buttons.cmd "textbf" "ta" (parse "\\textbf{B}");
+            Buttons.cmd "textit" "ta" (parse "\\textit{I}");
+            Buttons.cmd "underline" "ta" (parse "\\underline{U}");
+            Buttons.cmd "sout" "ta" (parse "\\sout{S}");
+            Buttons.cmd ~toggle:false "notacommand" "ta" (parse "NC");
+            Buttons.env "notanenvironment" "ta" (parse "NE");
+            Buttons.lst "itemize" "item" "ta" [pcdata "&bullet;"];
+            br ();
+            Form.textarea ~a:[a_id "ta"; a_rows 20; a_cols 80] ~name:text ();
             br ();
             Form.input ~input_type:`Submit ~value:"View Result" Form.string
           ]) ()
