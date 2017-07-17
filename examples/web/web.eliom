@@ -40,15 +40,15 @@ let service_home =
       ) (
         body [
           Form.post_form service_result (fun text -> [
-            Buttons.cmd "textbf" "ta" (parse "\\textbf{B}");
-            Buttons.cmd "textit" "ta" (parse "\\textit{I}");
-            Buttons.cmd "underline" "ta" (parse "\\underline{U}");
-            Buttons.cmd "sout" "ta" (parse "\\sout{S}");
-            Buttons.cmd ~toggle:false "notacommand" "ta" (parse "NC");
-            Buttons.env "notanenvironment" "ta" (parse "NE");
-            Buttons.lst "itemize" "item" "ta" [pcdata "&bullet;"];
+            Buttons.cmd "textbf" (parse "\\textbf{B}");
+            Buttons.cmd "textit" (parse "\\textit{I}");
+            Buttons.cmd "underline" (parse "\\underline{U}");
+            Buttons.cmd "sout" (parse "\\sout{S}");
+            Buttons.cmd ~toggle:false "notacommand" (parse "NC");
+            Buttons.env "notanenvironment" (parse "NE");
+            Buttons.lst "itemize" "item" [pcdata "&bullet;"];
             br ();
-            Form.textarea ~a:[a_id "ta"; a_rows 20; a_cols 80] ~name:text ();
+            Buttons.textarea ~a:[a_rows 20; a_cols 80] ~name:text ();
             br ();
             Form.input ~input_type:`Submit ~value:"View Result" Form.string
           ]) ()
