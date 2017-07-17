@@ -1,6 +1,6 @@
 # OASIS_START
-# DO NOT EDIT (digest: d0862e731665478fe298ed81cd29109e)
-version = "0.1.0"
+# DO NOT EDIT (digest: c50ede5513de3f6fb787ddfa22acac61)
+version = "0.2"
 description = "Parsing LaTeX-like text in OCaml"
 requires = "str eliom.server threads"
 archive(byte) = "camelat.cma"

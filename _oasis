@@ -1,6 +1,6 @@
 OASISFormat:      0.4
 Name:             Camelat
-Version:          0.1.0
+Version:          0.2
 Synopsis:         Parsing LaTeX-like text in OCaml
 Authors:          Fabian Pijcke <fabian@pijcke.net>
 License:          LGPL-2.1 with OCaml linking exception
