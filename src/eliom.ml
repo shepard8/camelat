@@ -22,10 +22,25 @@ open Eliom_content.Html.D
 type 'a cfg = 'a Cfg.cfg
 
 let r_nl = Str.regexp "$"
+let smileys = [
+  ":)", "smile";
+  ":-)", "smile";
+  ";)", "wink";
+  ";-)", "wink";
+  ":(", "sad";
+  ":-(", "sad"
+]
+let r_nl_smileys = Str.regexp (String.concat "\\|" ("$" :: List.map (fun (s, _) -> Str.quote s) smileys))
 let text s =
-  let parts = Str.split (Str.regexp "$") s in
-  let parts = List.rev_map pcdata parts in
-  List.fold_left (fun acc t -> t :: br () :: acc) [List.hd parts] (List.tl parts)
+  let parts = Str.full_split r_nl_smileys s in
+  List.map (function
+    | Str.Text t -> pcdata t
+    | Str.Delim "" | Str.Delim "\n" -> br ()
+    | Str.Delim smiley -> 
+        let path = ["smileys"; List.assoc smiley smileys] in
+        let src = make_uri (Eliom_service.static_dir ()) path in
+        img ~a:[a_title "smiley"] ~src ~alt:smiley ()
+  ) parts
 
 type pwi = Html_types.phrasing_without_interactive
 type pwl = Html_types.phrasing_without_label
