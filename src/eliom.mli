@@ -44,5 +44,6 @@ val popt : string -> string param
 
 val register_style_param : t -> Cfg.csname -> 'a param -> ('a -> string) -> unit
 
-val register_a : t -> Cfg.csname -> 'a param -> ('a -> [< `A of [< Html_types.phrasing_without_interactive] & [< Html_types.phrasing_without_interactive] & [< Html_types.flow5_without_interactive] ] elt) -> unit
+val register_a : t -> Cfg.csname -> 'a param -> ('a -> p) -> unit
 
+val register_a_param : t -> Cfg.csname -> 'a param -> 'b param -> ('a -> 'b -> p) -> unit

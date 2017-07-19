@@ -90,11 +90,21 @@ let register_style_param t name param style =
 let reg_a (cfg : 'a Cfg.cfg) csname param f =
   Cfg.register_cmd cfg csname (fun s ->
     let p = get_param param s in
-    [ f p ]
+    [ span [f p] ]
   )
 
 let register_a t csname (param : 'a param) f =
-  reg_a t.f5 csname param (f :> 'a -> f5);
-  reg_a t.p csname param (f :> 'a -> p);
-  reg_a t.pwl csname param (f :> 'a -> pwl)
+  reg_a t.f5 csname param f;
+  reg_a t.p csname param f
+
+let reg_a_param (cfg : 'a Cfg.cfg) csname param1 param2 f =
+  Cfg.register_cmd cfg csname (fun s ->
+    let p1 = get_param param1 s in
+    let p2 = get_param param2 s in
+    [ span [f p1 p2] ]
+  )
+
+let register_a_param t csname (param1 : 'a param) (param2 : 'b param) f =
+  reg_a_param t.f5 csname param1 param2 f;
+  reg_a_param t.p csname param1 param2 f
 

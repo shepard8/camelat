@@ -62,9 +62,9 @@ let () =
   Eliom.reg_wrap cfgs.Eliom.f5 "subsection" h4 cfgs.Eliom.p;
   Eliom.reg_wrap cfgs.Eliom.f5 "subsubsection" h5 cfgs.Eliom.p
 
-let () = Eliom.register_a cfgs "link" Eliom.parg (fun arg -> 
-  Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg]
-)
+let () =
+  let f content url = Raw.a ~a:[a_href (uri_of_string (fun () -> url))] (if content = [] then [pcdata url] else content) in
+  Eliom.register_a_param cfgs "link" (Eliom.Opt (cfgs.Eliom.pwi, [])) Eliom.parg f
 
 (* List *)
 let cfg_item = Cfg.init (fun _ -> []) List.concat
