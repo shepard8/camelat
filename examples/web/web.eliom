@@ -19,6 +19,66 @@
 
 open Eliom_content.Html.D
 
+(* {1 Populating the configuration} *)
+
+let smileys = [
+  ":)", "smile";
+  ":-)", "smile";
+  ";)", "wink";
+  ";-)", "wink";
+  ":(", "sad";
+  ":-(", "sad"
+]
+
+let cfgs = Eliom.eliominit ~smileys ()
+
+let styles = [
+  ("textbf", "font-weight: bold");
+  ("textit", "font-style: italic");
+  ("underline", "text-decoration: underline");
+  ("sout", "text-decoration: line-through");
+  ("textrm", "font-family: serif");
+  ("textsf", "font-family: sans-serif");
+  ("texttt", "font-family: monospace");
+  ("textsc", "font-variant: small-caps");
+  ("tiny", "font-size: 6pt");
+  ("scriptsize", "font-size: 8pt");
+  ("footnotesize", "font-size: 9pt");
+  ("small", "font-size: 10pt");
+  ("normalsize", "font-size: 10.95pt");
+  ("large", "font-size: 12pt");
+  ("Large", "font-size: 14.4pt");
+  ("LARGE", "font-size: 17.28pt");
+  ("huge", "font-size: 20.74pt");
+  ("Huge", "font-size: 24.88pt");
+]
+
+let () = List.iter (fun (n, s) -> Eliom.register_style cfgs n s) styles
+
+let () = Eliom.register_style_param cfgs "textcolor" Eliom.parg (fun c -> "color: " ^ c ^ ";")
+
+let () =
+  Eliom.reg_wrap cfgs.Eliom.f5 "section" h3 cfgs.Eliom.p;
+  Eliom.reg_wrap cfgs.Eliom.f5 "subsection" h4 cfgs.Eliom.p;
+  Eliom.reg_wrap cfgs.Eliom.f5 "subsubsection" h5 cfgs.Eliom.p
+
+let () = Eliom.register_a cfgs "link" Eliom.parg (fun arg -> 
+  Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg]
+)
+
+(* List *)
+let cfg_item = Cfg.init (fun _ -> []) List.concat
+let () =
+  Cfg.register_cmd cfg_item "item" (fun s -> [li (Cfg.read_item cfgs.Eliom.f5 "item" s)])
+
+let () =
+  Cfg.register_env cfgs.Eliom.f5 "itemize"
+  (fun _ -> ())
+  (fun () -> cfg_item)
+  (fun () content -> [ul content])
+
+(* {1 Registering services} *)
+
 let service_result =
   Eliom_registration.Html.create
   ~path:(Eliom_service.Path ["result"])
@@ -29,7 +89,7 @@ let service_result =
         head (title (pcdata "TexML Web Example")) []
       ) (
         body (
-          match Cfg.parse Eliom.cfg_f5 text with
+          match Cfg.parse cfgs.Eliom.f5 text with
           | Ok v -> v
           | Error (v, errors) -> pcdata "Errors : " ::
             ul (List.map (fun (i, e) -> li [pcdata (Printf.sprintf "%d : %s" i
@@ -42,7 +102,7 @@ let service_result =
         )
       )))
 
-let parse text = match Cfg.parse Eliom.cfg_pwi text with
+let parse text = match Cfg.parse cfgs.Eliom.pwi text with
 | Ok v -> v
 | Error (v, _) -> v
 
