@@ -44,15 +44,15 @@
 open Eliom_content.Html.D
 
 type f5 = Html_types.flow5 elt
+type f5wi = Html_types.flow5_without_interactive elt
 type p = Html_types.phrasing elt
 type pwi = Html_types.phrasing_without_interactive elt
-type pwl = Html_types.phrasing_without_label elt
 
 type t = {
   f5 : f5 list Cfg.cfg;
+  f5wi : f5wi list Cfg.cfg;
   p : p list Cfg.cfg;
   pwi : pwi list Cfg.cfg;
-  pwl : pwl list Cfg.cfg;
 }
 
 val eliominit : ?smileys:(string * string) list -> ?smileys_path:string list -> ?endline_br:bool -> unit -> t
@@ -71,3 +71,4 @@ val register_style_param : t -> Cfg.csname -> 'a param -> ('a -> string) -> unit
 val register_a : t -> Cfg.csname -> 'a param -> ('a -> p) -> unit
 
 val register_a_param : t -> Cfg.csname -> 'a param -> 'b param -> ('a -> 'b -> p) -> unit
+

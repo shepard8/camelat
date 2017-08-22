@@ -20,15 +20,15 @@
 open Eliom_content.Html.D
 
 type f5 = Html_types.flow5 elt
+type f5wi = Html_types.flow5_without_interactive elt
 type p = Html_types.phrasing elt
 type pwi = Html_types.phrasing_without_interactive elt
-type pwl = Html_types.phrasing_without_label elt
 
 type t = {
   f5 : f5 list Cfg.cfg;
+  f5wi : f5wi list Cfg.cfg;
   p : p list Cfg.cfg;
   pwi : pwi list Cfg.cfg;
-  pwl : pwl list Cfg.cfg;
 }
 
 let text smileys smileys_path endline_br s =
@@ -49,9 +49,9 @@ let eliominit ?(smileys=[]) ?(smileys_path=["smileys"]) ?(endline_br=true) () =
   let text = text smileys smileys_path endline_br in
   {
     f5 = Cfg.init text List.concat;
+    f5wi = Cfg.init text List.concat;
     p = Cfg.init text List.concat;
     pwi = Cfg.init text List.concat;
-    pwl = Cfg.init text List.concat;
   }
 
 let reg_wrap cfg name f sub =
@@ -62,9 +62,9 @@ let reg_style cfg name style sub =
 
 let register_style t name style =
   reg_style t.f5 name style t.p;
+  reg_style t.f5wi name style t.pwi;
   reg_style t.p name style t.p;
-  reg_style t.pwi name style t.pwi;
-  reg_style t.pwl name style t.p
+  reg_style t.pwi name style t.pwi
 
 type 'a param = Arg of 'a Cfg.cfg | Opt of ('a Cfg.cfg * 'a)
 let parg = Arg Cfg.cfg_text
@@ -83,9 +83,9 @@ let reg_param_style cfg name param style sub =
 
 let register_style_param t name param style =
   reg_param_style t.f5 name param style t.p;
+  reg_param_style t.f5wi name param style t.pwi;
   reg_param_style t.p name param style t.p;
-  reg_param_style t.pwi name param style t.pwi;
-  reg_param_style t.pwl name param style t.p
+  reg_param_style t.pwi name param style t.pwi
 
 let reg_a (cfg : 'a Cfg.cfg) csname param f =
   Cfg.register_cmd cfg csname (fun s ->
