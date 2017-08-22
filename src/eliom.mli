@@ -30,15 +30,18 @@
  * example be used inside a "div" element.
  * - p stands for phrasing, this configuration parses LaTeX-like code into
  * elements that can be used inside a "span" element.
- * - pwi stands for phrasing_without_interaction, resulting elements can be
+ * - pwi stands for phrasing_without_interactive, resulting elements can be
  * used inside some "a" element. Note that in HTML5, the "a" element can not
  * contain other "a" elements.
- * - pwl stands for phrasing_without_label, resulting elements can be used
- * inside a label. This is essentially useful for some "secret" text that can
- * be shown or hidden using a checkbox.
+ * - f5wi stands for flow5_without_interactive, resulting elements can be used
+ * inside some "a" element.
  *
  * In addition to this type, some facilities allow you to define new LaTeX
  * commands that are automatically added to the relevant configurations.
+ *
+ * In this module, functions prefixed by [reg_] apply to configurations while
+ * functions prefixed by [register_] apply to as much configurations in the [t]
+ * type as possible.
  *)
 
 open Eliom_content.Html.D
@@ -55,20 +58,54 @@ type t = {
   pwi : pwi list Cfg.cfg;
 }
 
-val eliominit : ?smileys:(string * string) list -> ?smileys_path:string list -> ?endline_br:bool -> unit -> t
+val eliominit : ?smileys:(string * string) list ->
+  ?smileys_path:string list -> ?endline_br:bool -> unit -> t
+(** [eliominit ()] initializes the type [t], creating four configurations (in
+ * the sense of {Cfg.t}), which handle distinct regions in a LaTeX document. It
+ * is possible to register new LaTeX commands/environments to any of these
+ * configurations. This is typically done for the f5 configuration, whose
+ * commands/environments are the only able to use f5 elements.
+ *
+ * ?smileys allows to register strings that will be substituted by an image.
+ * Default is [[]].
+ *
+ * ?smileys_path allows to register the directory in which smiley images can be
+ * found. This is a list of directory names like those used by eliom. Default
+ * is [["static"; "smileys"]].
+ *
+ * ?endline_br allows to specify whether endlines have to be replaced by <br />
+ * tags or not. Default is [true].
+ * *)
 
 val reg_wrap : 'a list Cfg.cfg -> Cfg.csname -> ('b -> 'a) -> 'b Cfg.cfg -> unit
+(** [reg_wrap cfg csname f sub] registers a command [csname] in configuration
+ * [cfg] that will apply [f] to its argument, which will be captured using
+ * configuration [sub]. *)
 
-val register_style : t -> Cfg.csname -> string -> unit
+val register_style : t -> Cfg.csname -> (Cfg.source -> string) -> unit
+(** [register_style t csname f_style] registers a command [csname] in all four
+ * of [t] configurations. The [f_style] function can consume elements from the
+ * source to produce a style string, which will be applied to a <span> tag
+ * around the next command argument, itself captured by the largest
+ * configuration possible:
+ * - In t.f5 and t.p, the last argument will be captured using t.p;
+ * - In t.f5wi and t.pwi, the last argument will be captured using t.pwi.
+ *
+ * Example with static style:
+ *    
+ *    register_style t "textbf" (fun _ -> "font-weight: bold")
+ *
+ * Example with dynamic style:
+ *
+ *    register_style t "size" (fun s ->
+ *      let size = Cfg.read_arg Cfg.cfg_int s in
+ *      sprintf "font-size: %d%%" size
+ *    )
+ *
+ * *)
 
-type 'a param = Arg of 'a Cfg.cfg | Opt of ('a Cfg.cfg * 'a)
-
-val parg : string param
-val popt : string -> string param
-
-val register_style_param : t -> Cfg.csname -> 'a param -> ('a -> string) -> unit
-
-val register_a : t -> Cfg.csname -> 'a param -> ('a -> p) -> unit
-
-val register_a_param : t -> Cfg.csname -> 'a param -> 'b param -> ('a -> 'b -> p) -> unit
+val register_escape : t -> Cfg.csname -> (Cfg.source -> string) -> unit
+(** [register_escape t csname f_escape] registers a command [csname] in all
+ * four of [t] configurations. The command will produce text in a pcdata
+ * container, possibly consuming a part of the source. *)
 

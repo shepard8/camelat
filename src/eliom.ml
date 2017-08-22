@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *)
 
+(* Convention : reg_* functions apply to one configuration, while register_*
+ * functions apply to as much configurations as possible. *)
+
 open Eliom_content.Html.D
 
 type f5 = Html_types.flow5 elt
@@ -57,54 +60,27 @@ let eliominit ?(smileys=[]) ?(smileys_path=["smileys"]) ?(endline_br=true) () =
 let reg_wrap cfg name f sub =
   Cfg.register_cmd cfg name (fun s -> [f (Cfg.read_arg sub s)])
 
-let reg_style cfg name style sub =
-  reg_wrap cfg name (fun a -> span ~a:[a_style style] a) sub
-
-let register_style t name style =
-  reg_style t.f5 name style t.p;
-  reg_style t.f5wi name style t.pwi;
-  reg_style t.p name style t.p;
-  reg_style t.pwi name style t.pwi
-
-type 'a param = Arg of 'a Cfg.cfg | Opt of ('a Cfg.cfg * 'a)
-let parg = Arg Cfg.cfg_text
-let popt d = Opt (Cfg.cfg_text, d)
-
-let get_param param s = match param with
-| Arg sub -> Cfg.read_arg sub s
-| Opt (sub, d) -> Cfg.read_opt sub s d
-
-let reg_param_style cfg name param style sub =
+let reg_style cfg name f_style sub =
   Cfg.register_cmd cfg name (fun s ->
-    let p = get_param param s in
-    let arg = Cfg.read_arg sub s in
-    [ span ~a:[a_style (style p)] arg ]
+    let style = f_style s in
+    [span ~a:[a_style style] (Cfg.read_arg sub s)]
   )
 
-let register_style_param t name param style =
-  reg_param_style t.f5 name param style t.p;
-  reg_param_style t.f5wi name param style t.pwi;
-  reg_param_style t.p name param style t.p;
-  reg_param_style t.pwi name param style t.pwi
+let register_style t name f_style =
+  reg_style t.f5 name f_style t.p;
+  reg_style t.f5wi name f_style t.pwi;
+  reg_style t.p name f_style t.p;
+  reg_style t.pwi name f_style t.pwi
 
-let reg_a (cfg : 'a Cfg.cfg) csname param f =
-  Cfg.register_cmd cfg csname (fun s ->
-    let p = get_param param s in
-    [ span [f p] ]
+let reg_escape cfg name f =
+  Cfg.register_cmd cfg name (fun s ->
+    let c = f s in
+    [ pcdata c ]
   )
 
-let register_a t csname (param : 'a param) f =
-  reg_a t.f5 csname param f;
-  reg_a t.p csname param f
-
-let reg_a_param (cfg : 'a Cfg.cfg) csname param1 param2 f =
-  Cfg.register_cmd cfg csname (fun s ->
-    let p1 = get_param param1 s in
-    let p2 = get_param param2 s in
-    [ span [f p1 p2] ]
-  )
-
-let register_a_param t csname (param1 : 'a param) (param2 : 'b param) f =
-  reg_a_param t.f5 csname param1 param2 f;
-  reg_a_param t.p csname param1 param2 f
+let register_escape t name f =
+  reg_escape t.f5 name f;
+  reg_escape t.f5wi name f;
+  reg_escape t.p name f;
+  reg_escape t.pwi name f
 

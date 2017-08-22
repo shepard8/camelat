@@ -53,28 +53,50 @@ let styles = [
   ("Huge", "font-size: 24.88pt");
 ]
 
-let () = List.iter (fun (n, s) -> Eliom.register_style cfgs n s) styles
+let () = List.iter (fun (n, s) -> Eliom.register_style cfgs n (fun _ -> s)) styles
 
-let () = Eliom.register_style_param cfgs "textcolor" Eliom.parg (fun c -> "color: " ^ c ^ ";")
+let () = Eliom.register_style cfgs "textcolor" (fun s ->
+  let color = Cfg.read_arg Cfg.cfg_text s in
+  "color: " ^ color ^ ";"
+)
 
 let () =
   Eliom.reg_wrap cfgs.Eliom.f5 "section" h3 cfgs.Eliom.p;
+  Eliom.reg_wrap cfgs.Eliom.f5wi "section" h3 cfgs.Eliom.pwi;
   Eliom.reg_wrap cfgs.Eliom.f5 "subsection" h4 cfgs.Eliom.p;
-  Eliom.reg_wrap cfgs.Eliom.f5 "subsubsection" h5 cfgs.Eliom.p
+  Eliom.reg_wrap cfgs.Eliom.f5wi "subsection" h4 cfgs.Eliom.pwi;
+  Eliom.reg_wrap cfgs.Eliom.f5 "subsubsection" h5 cfgs.Eliom.p;
+  Eliom.reg_wrap cfgs.Eliom.f5wi "subsubsection" h5 cfgs.Eliom.pwi
 
 let () =
-  let f content url = Raw.a ~a:[a_href (uri_of_string (fun () -> url))] (if content = [] then [pcdata url] else content) in
-  Eliom.register_a_param cfgs "link" (Eliom.Opt (cfgs.Eliom.pwi, [])) Eliom.parg f
+  Cfg.register_cmd cfgs.Eliom.f5 "link" (fun s ->
+    let content = Cfg.read_opt cfgs.Eliom.f5wi s [] in
+    let url = Cfg.read_arg Cfg.cfg_text s in
+    let content = if content = [] then [pcdata url] else content in
+    [ Raw.a ~a:[a_href (Xml.uri_of_string url)] content ]
+  );
+  Cfg.register_cmd cfgs.Eliom.p "link" (fun s ->
+    let content = Cfg.read_opt cfgs.Eliom.pwi s [] in
+    let url = Cfg.read_arg Cfg.cfg_text s in
+    let content = if content = [] then [pcdata url] else content in
+    [ Raw.a ~a:[a_href (Xml.uri_of_string url)] content ]
+  )
 
 (* List *)
-let cfg_item = Cfg.init (fun _ -> []) List.concat
+let cfg_item_f5 = Cfg.init (fun _ -> []) List.concat
+let cfg_item_f5wi = Cfg.init (fun _ -> []) List.concat
 let () =
-  Cfg.register_cmd cfg_item "item" (fun s -> [li (Cfg.read_item cfgs.Eliom.f5 "item" s)])
+  Cfg.register_cmd cfg_item_f5 "item" (fun s -> [li (Cfg.read_item cfgs.Eliom.f5 "item" s)]);
+  Cfg.register_cmd cfg_item_f5wi "item" (fun s -> [li (Cfg.read_item cfgs.Eliom.f5wi "item" s)])
 
 let () =
   Cfg.register_env cfgs.Eliom.f5 "itemize"
   (fun _ -> ())
-  (fun () -> cfg_item)
+  (fun () -> cfg_item_f5)
+  (fun () content -> [ul content]);
+  Cfg.register_env cfgs.Eliom.f5wi "itemize"
+  (fun _ -> ())
+  (fun () -> cfg_item_f5wi)
   (fun () content -> [ul content])
 
 (* {1 Registering services} *)
