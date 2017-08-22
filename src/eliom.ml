@@ -1,114 +1,86 @@
+(*
+ * Camelat - Parsing LaTeX-like text in OCaml
+ * Copyright (C) year  name of author
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *)
+
+(* Convention : reg_* functions apply to one configuration, while register_*
+ * functions apply to as much configurations as possible. *)
+
 open Eliom_content.Html.D
 
-type 'a cfg = 'a Cfg.cfg
+type f5 = Html_types.flow5 elt
+type f5wi = Html_types.flow5_without_interactive elt
+type p = Html_types.phrasing elt
+type pwi = Html_types.phrasing_without_interactive elt
 
-let r_nl = Str.regexp "$"
-let text s =
-  let parts = Str.split (Str.regexp "$") s in
-  let parts = List.rev_map pcdata parts in
-  List.fold_left (fun acc t -> t :: br () :: acc) [List.hd parts] (List.tl parts)
+type t = {
+  f5 : f5 list Cfg.cfg;
+  f5wi : f5wi list Cfg.cfg;
+  p : p list Cfg.cfg;
+  pwi : pwi list Cfg.cfg;
+}
 
-type pwi = Html_types.phrasing_without_interactive
-type pwl = Html_types.phrasing_without_label
-type p = Html_types.phrasing
-type f5 = Html_types.flow5
+let text smileys smileys_path endline_br s =
+  let split_on = "$" :: List.map (fun (s, _) -> Str.quote s) smileys in
+  let r = Str.regexp (String.concat "\\|" split_on) in
+  let parts = Str.full_split r s in
+  List.map (function
+    | Str.Text t -> pcdata t
+    | Str.Delim "" -> pcdata ""
+    | Str.Delim "\n" -> if endline_br then br () else pcdata ""
+    | Str.Delim smiley ->
+        let path = smileys_path @ [List.assoc smiley smileys] in
+        let src = make_uri (Eliom_service.static_dir ()) path in
+        img ~src ~alt:smiley ()
+  ) parts
 
-let cfg_pwi : pwi elt list_wrap cfg = Cfg.init text List.concat
-let cfg_pwl : pwl elt list_wrap cfg = Cfg.init text List.concat
-let cfg_p : p elt list_wrap cfg = Cfg.init text List.concat
-let cfg_f5 : f5 elt list_wrap cfg = Cfg.init text List.concat
+let eliominit ?(smileys=[]) ?(smileys_path=["smileys"]) ?(endline_br=true) () =
+  let text = text smileys smileys_path endline_br in
+  {
+    f5 = Cfg.init text List.concat;
+    f5wi = Cfg.init text List.concat;
+    p = Cfg.init text List.concat;
+    pwi = Cfg.init text List.concat;
+  }
 
 let reg_wrap cfg name f sub =
   Cfg.register_cmd cfg name (fun s -> [f (Cfg.read_arg sub s)])
 
-(* Bold, italic, underline, strike *)
-let reg_style cfg name style sub =
-  reg_wrap cfg name (fun a -> span ~a:[a_style style] a) sub
-
-let () =
-  let styles = [
-    ("textbf", "font-weight: bold");
-    ("textit", "font-style: italic");
-    ("underline", "text-decoration: underline");
-    ("sout", "text-decoration: line-through");
-    ("textrm", "font-family: serif");
-    ("textsf", "font-family: sans-serif");
-    ("texttt", "font-family: monospace");
-    ("textsc", "font-variant: small-caps");
-    ("tiny", "font-size: 6pt");
-    ("scriptsize", "font-size: 8pt");
-    ("footnotesize", "font-size: 9pt");
-    ("small", "font-size: 10pt");
-    ("normalsize", "font-size: 10.95pt");
-    ("large", "font-size: 12pt");
-    ("Large", "font-size: 14.4pt");
-    ("LARGE", "font-size: 17.28pt");
-    ("huge", "font-size: 20.74pt");
-    ("Huge", "font-size: 24.88pt");
-   ] in
-  List.iter (fun (n, s) -> reg_style cfg_pwi n s cfg_pwi) styles;
-  List.iter (fun (n, s) -> reg_style cfg_pwl n s cfg_p) styles;
-  List.iter (fun (n, s) -> reg_style cfg_p n s cfg_p) styles;
-  List.iter (fun (n, s) -> reg_style cfg_f5 n s cfg_p) styles
-
-(* Color *)
-let reg_color cfg sub =
-  Cfg.register_cmd cfg "textcolor" (fun s ->
-    let color = Cfg.read_arg Cfg.cfg_text s in
-    let arg = Cfg.read_arg sub s in
-    [ span ~a:[a_style ("color: " ^ color ^ ";")] arg ]
+let reg_style cfg name f_style sub =
+  Cfg.register_cmd cfg name (fun s ->
+    let style = f_style s in
+    [span ~a:[a_style style] (Cfg.read_arg sub s)]
   )
 
-let () =
-  reg_color cfg_pwi cfg_pwi;
-  reg_color cfg_pwl cfg_p;
-  reg_color cfg_p cfg_p;
-  reg_color cfg_f5 cfg_p
+let register_style t name f_style =
+  reg_style t.f5 name f_style t.p;
+  reg_style t.f5wi name f_style t.pwi;
+  reg_style t.p name f_style t.p;
+  reg_style t.pwi name f_style t.pwi
 
-(* Sectionning *)
-let () =
-  reg_wrap cfg_f5 "section" h3 cfg_p;
-  reg_wrap cfg_f5 "subsection" h4 cfg_p;
-  reg_wrap cfg_f5 "subsubsection" h5 cfg_p
-
-(* Link *)
-let reg_link cfg =
-  Cfg.register_cmd cfg "link" (fun s ->
-    let url = Cfg.read_opt Cfg.cfg_text s "" in
-    if url = "" then
-      let arg = Cfg.read_opt Cfg.cfg_text s "" in
-      [ Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg] ]
-    else
-      let arg = Cfg.read_arg cfg_pwi s in
-      [ Raw.a ~a:[a_href (uri_of_string (fun () -> url))] arg ]
+let reg_escape cfg name f =
+  Cfg.register_cmd cfg name (fun s ->
+    let c = f s in
+    [ pcdata c ]
   )
 
-let () =
-  reg_link cfg_pwl;
-  reg_link cfg_p
-
-let () =
-  Cfg.register_cmd cfg_f5 "link" (fun s ->
-    let url = Cfg.read_opt Cfg.cfg_text s "" in
-    if url = "" then
-      let arg = Cfg.read_opt Cfg.cfg_text s "" in
-      [ Raw.a ~a:[a_href (uri_of_string (fun () -> arg))] [pcdata arg] ]
-    else
-      let arg = (Cfg.read_arg cfg_pwi s :
-        pwi elt list_wrap :>
-        Html_types.flow5_without_interactive elt list_wrap
-      ) in
-      [ Raw.a ~a:[a_href (uri_of_string (fun () -> url))] arg ]
-  )
-
-(* List *)
-let cfg_item = Cfg.init (fun _ -> []) List.concat
-let () =
-  Cfg.register_cmd cfg_item "item" (fun s -> [li (Cfg.read_item cfg_f5 "item" s)])
-
-let () =
-  Cfg.register_env cfg_f5 "itemize"
-  (fun _ -> ())
-  (fun () -> cfg_item)
-  (fun () content -> [ul content])
+let register_escape t name f =
+  reg_escape t.f5 name f;
+  reg_escape t.f5wi name f;
+  reg_escape t.p name f;
+  reg_escape t.pwi name f
 
