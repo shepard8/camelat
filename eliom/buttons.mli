@@ -30,6 +30,7 @@
  * website, then load it within the head section.
  *)
 
+open Camelat
 open Eliom_content.Html.D
 type id = string
 (** The optional ~id argument in each of this module's functions allows you to

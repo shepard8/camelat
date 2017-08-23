@@ -20,6 +20,7 @@
 (* Convention : reg_* functions apply to one configuration, while register_*
  * functions apply to as much configurations as possible. *)
 
+open Camelat
 open Eliom_content.Html.D
 
 type f5 = Html_types.flow5 elt
