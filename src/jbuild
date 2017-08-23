@@ -1,2 +1,3 @@
 (library
- ((name camelat)))
+ ((public_name camelat)
+  (name camelat)))

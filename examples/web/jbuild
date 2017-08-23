@@ -1,0 +1,4 @@
+(library
+ ((name web)
+  (libraries (camelat camelat_eliom eliom.server))))
+
