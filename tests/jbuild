@@ -1,0 +1,7 @@
+(executable
+ ((name main)
+  (libraries (camelat testsimple))))
+
+(alias
+ ((name runtest)
+  (action (run ${exe:main.exe}))))
