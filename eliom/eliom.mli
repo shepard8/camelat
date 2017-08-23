@@ -44,6 +44,7 @@
  * type as possible.
  *)
 
+open Camelat
 open Eliom_content.Html.D
 
 type f5 = Html_types.flow5 elt

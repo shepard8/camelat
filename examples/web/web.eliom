@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *)
 
+open Camelat
+open Camelat_eliom
 open Eliom_content.Html.D
 
 (* {1 Populating the configuration} *)

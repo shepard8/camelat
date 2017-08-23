@@ -1,8 +1,0 @@
-(* OASIS_START *)
-(* DO NOT EDIT (digest: a4b3f2f75b3a58073db505cefe1e70da) *)
-
-Authors of Camelat:
-
-* Fabian Pijcke <fabian@pijcke.net>
-
-(* OASIS_STOP *)
