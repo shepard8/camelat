@@ -105,6 +105,12 @@ val register_style : t -> Cfg.csname -> (Cfg.source -> string) -> unit
  *
  * *)
 
+val register_leaf : t -> Cfg.csname -> (Cfg.source -> pwi list) -> unit
+(** [register_leaf t csname f] allows you to register something in all four
+ * configurations at once. The downside being that the generated element
+ * therefore needs to be of the most restrictive type; {pwi}. It is still
+ * useful to register commands that have no children such as images.  *)
+
 val register_escape : t -> Cfg.csname -> (Cfg.source -> string) -> unit
 (** [register_escape t csname f_escape] registers a command [csname] in all
  * four of [t] configurations. The command will produce text in a pcdata

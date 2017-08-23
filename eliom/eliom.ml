@@ -79,6 +79,12 @@ let reg_escape cfg name f =
     [ pcdata c ]
   )
 
+let register_leaf t name (f : Cfg.source -> pwi list) =
+  Cfg.register_cmd t.f5 name (f :> Cfg.source -> f5 list);
+  Cfg.register_cmd t.f5wi name (f :> Cfg.source -> f5wi list);
+  Cfg.register_cmd t.p name (f :> Cfg.source -> p list);
+  Cfg.register_cmd t.pwi name f
+
 let register_escape t name f =
   reg_escape t.f5 name f;
   reg_escape t.f5wi name f;
