@@ -20,6 +20,8 @@
 (** This simple example illustrates how to use Camelat through a simple
  * configuration parsing text into text. *)
 
+open Camelat
+
 (* We start by initializing a configuration which will leave text untouched and
  * will just catenate groups of text. *)
 let simplecfg = Cfg.init (fun s -> s) (fun l -> String.concat "" l)
