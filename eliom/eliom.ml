@@ -39,10 +39,13 @@ let text smileys smileys_path endline_br s =
   let split_on = "$" :: List.map (fun (s, _) -> Str.quote s) smileys in
   let r = Str.regexp (String.concat "\\|" split_on) in
   let parts = Str.full_split r s in
+  let parts = match (List.hd (List.rev parts)) with
+  | Str.Delim "" -> List.rev (List.tl (List.rev parts))
+  | Str.Text _ | Str.Delim _ -> parts
+  in
   List.map (function
     | Str.Text t -> pcdata t
-    | Str.Delim "" -> pcdata ""
-    | Str.Delim "\n" -> if endline_br then br () else pcdata ""
+    | Str.Delim "" -> if endline_br then br () else pcdata ""
     | Str.Delim smiley ->
         let path = smileys_path @ [List.assoc smiley smileys] in
         let src = make_uri (Eliom_service.static_dir ()) path in
@@ -84,6 +87,10 @@ let register_leaf t name (f : Cfg.source -> pwi list) =
   Cfg.register_cmd t.f5wi name (f :> Cfg.source -> f5wi list);
   Cfg.register_cmd t.p name (f :> Cfg.source -> p list);
   Cfg.register_cmd t.pwi name f
+
+let register_interactive_leaf t name (f : Cfg.source -> p list) =
+  Cfg.register_cmd t.f5 name (f :> Cfg.source -> f5 list);
+  Cfg.register_cmd t.p name f
 
 let register_escape t name f =
   reg_escape t.f5 name f;

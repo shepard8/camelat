@@ -111,6 +111,12 @@ val register_leaf : t -> Cfg.csname -> (Cfg.source -> pwi list) -> unit
  * therefore needs to be of the most restrictive type; {pwi}. It is still
  * useful to register commands that have no children such as images.  *)
 
+val register_interactive_leaf : t -> Cfg.csname -> (Cfg.source -> p list) -> unit
+(** [register_interactive_leaf t csname f] allows to register something in both
+ * {f5} and {p}. As interactive content is allowed in both of these
+ * configurations, the most restrictive type is {p}. It is useful to register
+ * some type of links such as icons. *)
+
 val register_escape : t -> Cfg.csname -> (Cfg.source -> string) -> unit
 (** [register_escape t csname f_escape] registers a command [csname] in all
  * four of [t] configurations. The command will produce text in a pcdata
